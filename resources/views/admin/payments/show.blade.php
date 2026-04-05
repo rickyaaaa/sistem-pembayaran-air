@@ -1,0 +1,137 @@
+<x-app-layout>
+    <x-slot name="title">Detail Pembayaran</x-slot>
+
+    <div class="row g-4 animate-in">
+        <!-- Payment Details -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i> Detail Pembayaran
+                </div>
+                <div class="card-body">
+                    <div class="detail-row">
+                        <div class="detail-label">No. Blok</div>
+                        <div class="detail-value fw-semibold">{{ strtoupper($payment->resident->block_number) }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Nama Warga</div>
+                        <div class="detail-value">{{ $payment->resident->user->name }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Periode</div>
+                        <div class="detail-value">{{ $payment->bill->period }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Tagihan</div>
+                        <div class="detail-value">Rp {{ number_format($payment->bill->amount, 0, ',', '.') }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Jumlah Dibayar</div>
+                        <div class="detail-value fw-bold text-primary">Rp {{ number_format($payment->amount_paid, 0, ',', '.') }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Tgl. Pembayaran</div>
+                        <div class="detail-value">{{ $payment->payment_date->format('d F Y') }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value">{!! $payment->status_badge !!}</div>
+                    </div>
+                    @if($payment->notes)
+                        <div class="detail-row">
+                            <div class="detail-label">Catatan</div>
+                            <div class="detail-value text-danger">{{ $payment->notes }}</div>
+                        </div>
+                    @endif
+                    @if($payment->confirmedBy)
+                        <div class="detail-row">
+                            <div class="detail-label">Dikonfirmasi oleh</div>
+                            <div class="detail-value">{{ $payment->confirmedBy->name }} ({{ $payment->confirmed_at?->format('d/m/Y H:i') }})</div>
+                        </div>
+                    @endif
+                    <div class="detail-row">
+                        <div class="detail-label">Tgl. Submit</div>
+                        <div class="detail-value">{{ $payment->created_at->format('d F Y, H:i') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            @if($payment->status === 'pending')
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <div class="d-flex gap-2 mb-3">
+                            <form method="POST" action="{{ route('admin.payments.confirm', $payment) }}" onsubmit="return confirm('Konfirmasi pembayaran ini?')">
+                                @csrf
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-lg me-1"></i> Konfirmasi
+                                </button>
+                            </form>
+
+                            <button type="button" class="btn btn-danger" data-bs-toggle="collapse" data-bs-target="#rejectForm">
+                                <i class="bi bi-x-lg me-1"></i> Tolak
+                            </button>
+                        </div>
+
+                        <div class="collapse" id="rejectForm">
+                            <form method="POST" action="{{ route('admin.payments.reject', $payment) }}">
+                                @csrf
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
+                                    <textarea class="form-control @error('notes') is-invalid @enderror"
+                                              id="notes" name="notes" rows="3" required placeholder="Jelaskan alasan penolakan...">{{ old('notes') }}</textarea>
+                                    @error('notes')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Yakin tolak pembayaran ini?')">
+                                    <i class="bi bi-x-lg me-1"></i> Konfirmasi Tolak
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        <!-- Proof Image -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-image me-2"></i> Bukti Pembayaran
+                </div>
+                <div class="card-body text-center">
+                    @if($payment->proof_file)
+                        @php
+                            $ext = strtolower(pathinfo($payment->proof_file, PATHINFO_EXTENSION));
+                        @endphp
+                        @if(in_array($ext, ['jpg', 'jpeg', 'png']))
+                            <img src="{{ asset('storage/' . $payment->proof_file) }}" alt="Bukti Pembayaran" class="proof-preview">
+                        @elseif($ext === 'pdf')
+                            <div class="mb-3">
+                                <i class="bi bi-file-earmark-pdf text-danger" style="font-size:3rem;"></i>
+                                <p class="mt-2">File PDF</p>
+                            </div>
+                        @endif
+                        <div class="mt-3">
+                            <a href="{{ route('admin.payments.proof', $payment) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-download me-1"></i> Buka File
+                            </a>
+                        </div>
+                    @else
+                        <div class="empty-state">
+                            <i class="bi bi-image"></i>
+                            <p>Bukti tidak tersedia</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{{ route('admin.payments.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Kembali
+        </a>
+    </div>
+</x-app-layout>
