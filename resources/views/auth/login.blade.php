@@ -12,12 +12,11 @@
             @csrf
 
             <div class="mb-3">
-                <label for="username" class="form-label">Username (No. Blok)</label>
+                <label for="username" class="form-label">Username</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <input type="text" class="form-control @error('username') is-invalid @enderror"
-                           id="username" name="username" value="{{ old('username') }}"
-                           placeholder="Contoh: a1" required autofocus>
+                    <input type="text" class="form-control @error('username') is-invalid @enderror" id="username"
+                        name="username" value="{{ old('username') }}" placeholder="Contoh: a1" required autofocus>
                 </div>
                 @error('username')
                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -28,8 +27,8 @@
                 <label for="password" class="form-label">Password</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                    <input type="password" class="form-control @error('password') is-invalid @enderror"
-                           id="password" name="password" placeholder="Masukkan password" required>
+                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password"
+                        name="password" placeholder="Masukkan password" required>
                 </div>
                 @error('password')
                     <div class="invalid-feedback d-block">{{ $message }}</div>

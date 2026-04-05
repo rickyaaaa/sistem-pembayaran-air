@@ -12,25 +12,23 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Redirect root to login
+// Redirect root to public resident dashboard
 Route::get('/', function () {
-    if (Auth::check()) {
-        return Auth::user()->isAdmin()
-            ? redirect()->route('admin.dashboard')
-            : redirect()->route('resident.dashboard');
+    if (Auth::check() && Auth::user()->isAdmin()) {
+        return redirect()->route('admin.dashboard');
     }
-    return redirect()->route('login');
+    return redirect()->route('resident.dashboard');
 });
 
 // Redirect generic dashboard
 Route::get('/dashboard', function () {
-    if (Auth::user()->isAdmin()) {
+    if (Auth::check() && Auth::user()->isAdmin()) {
         return redirect()->route('admin.dashboard');
     }
     return redirect()->route('resident.dashboard');
-})->middleware('auth')->name('dashboard');
+})->name('dashboard');
 
-// Change password (all roles)
+// Change password (all authenticated roles)
 Route::middleware('auth')->group(function () {
     Route::get('/change-password', [ChangePasswordController::class, 'edit'])->name('password.edit');
     Route::put('/change-password', [ChangePasswordController::class, 'update'])->name('password.update');
@@ -72,14 +70,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
 /*
 |--------------------------------------------------------------------------
-| Resident Routes
+| Resident Routes (PUBLIC - No authentication required)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'resident'])->prefix('warga')->name('resident.')->group(function () {
-    // Dashboard
+Route::prefix('warga')->name('resident.')->group(function () {
+    // Public Dashboard (financial summary + expense list)
     Route::get('/dashboard', [Resident\DashboardController::class, 'index'])->name('dashboard');
 
-    // Bills
+    // Bill Search by house number
     Route::get('/tagihan', [Resident\BillController::class, 'index'])->name('bills.index');
     Route::get('/tagihan/{bill}', [Resident\BillController::class, 'show'])->name('bills.show');
 

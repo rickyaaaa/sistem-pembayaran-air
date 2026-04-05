@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="SAB Springville - Sistem Informasi Tagihan Air Warga Springville">
+    <meta name="description" content="SAB Swadaya - Sistem Informasi Tagihan Air Warga Perum The Spring Ville">
 
-    <title>{{ $title ?? 'SAB Springville' }} - SAB Springville</title>
+    <title>{{ $title ?? 'SAB Swadaya' }} - SAB Swadaya Springville</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,8 +29,9 @@
     <nav id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-brand">
-                <i class="bi bi-droplet-fill text-primary"></i>
-                <span>SAB Springville</span>
+                <img src="{{ asset('images/logo.jpg') }}" alt="SAB Swadaya"
+                     style="height:32px;width:auto;object-fit:contain;border-radius:5px;background:#fff;padding:1px;">
+                <span>SAB Swadaya</span>
             </div>
             <button class="sidebar-close d-lg-none" onclick="toggleSidebar()">
                 <i class="bi bi-x-lg"></i>

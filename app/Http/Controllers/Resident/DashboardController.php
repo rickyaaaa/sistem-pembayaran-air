@@ -3,47 +3,41 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
-use App\Models\Bill;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Expense;
+use App\Models\Payment;
+use App\Models\Registration;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $resident = Auth::user()->resident;
+        // Financial Summary (current year)
+        $year = now()->year;
 
-        if (!$resident) {
-            abort(403, 'Data warga tidak ditemukan.');
-        }
+        $totalIncome = Payment::where('status', 'confirmed')
+            ->whereYear('payment_date', $year)
+            ->sum('amount_paid');
 
-        // Current month bill
-        $currentBill = Bill::where('resident_id', $resident->id)
-            ->where('month', now()->month)
-            ->where('year', now()->year)
-            ->first();
-
-        // Recent bills (last 6 months)
-        $recentBills = Bill::where('resident_id', $resident->id)
-            ->orderByDesc('year')
-            ->orderByDesc('month')
-            ->limit(6)
-            ->get();
-
-        // Stats
-        $totalUnpaid = Bill::where('resident_id', $resident->id)
-            ->where('status', 'unpaid')
+        $totalRegistrations = Registration::whereYear('payment_date', $year)
             ->sum('amount');
 
-        $totalPending = Bill::where('resident_id', $resident->id)
-            ->where('status', 'pending')
-            ->count();
+        $totalExpenses = Expense::whereYear('date', $year)
+            ->sum('amount');
+
+        $currentBalance = ($totalIncome + $totalRegistrations) - $totalExpenses;
+
+        // Last 5 expenses (with receipt link)
+        $recentExpenses = Expense::orderByDesc('date')
+            ->limit(5)
+            ->get();
 
         return view('resident.dashboard', compact(
-            'resident',
-            'currentBill',
-            'recentBills',
-            'totalUnpaid',
-            'totalPending',
+            'totalIncome',
+            'totalRegistrations',
+            'totalExpenses',
+            'currentBalance',
+            'recentExpenses',
+            'year',
         ));
     }
 }
