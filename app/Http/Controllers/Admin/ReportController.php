@@ -8,6 +8,9 @@ use App\Models\Bill;
 use App\Models\Resident;
 use App\Services\FinancialReportService;
 use Illuminate\Http\Request;
+use App\Exports\FinancialReportExport;
+use App\Exports\ResidentsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -15,7 +18,7 @@ class ReportController extends Controller
     {
         $year = (int) $request->input('year', now()->year);
 
-        // Fix 11: Use shared service
+        // Fetch all summary data via service
         $summary = $reportService->getSummary($year);
 
         $totalIncome        = $summary['total_income'];
@@ -28,7 +31,10 @@ class ReportController extends Controller
 
         // Expense by category
         $expensesByCategory = \App\Models\Expense::selectRaw('category, SUM(amount) as total')
-            ->whereYear('date', $year)
+            ->where(function($q) use ($year) {
+                 $yearFunc = \App\Helpers\DatabaseHelper::getYearFunction('date');
+                 $q->whereRaw("{$yearFunc} = ?", [$year]);
+            })
             ->groupBy('category')
             ->orderByDesc('total')
             ->get();
@@ -44,14 +50,6 @@ class ReportController extends Controller
             ? round(($billStats['paid'] / $billStats['total']) * 100, 1)
             : 0;
 
-        // Merge bill available years into service years
-        $billYears = Bill::selectRaw('DISTINCT year')
-            ->orderByDesc('year')
-            ->pluck('year')
-            ->toArray();
-        $availableYears = array_values(array_unique(array_merge($availableYears, $billYears)));
-        rsort($availableYears);
-
         return view('admin.reports.index', compact(
             'year',
             'totalIncome',
@@ -63,5 +61,20 @@ class ReportController extends Controller
             'billStats',
             'availableYears',
         ));
+    }
+
+    public function exportFinancial(Request $request)
+    {
+        $year = (int) $request->input('year', now()->year);
+        $filename = "Laporan_Keuangan_SAB_{$year}.xlsx";
+
+        return Excel::download(new FinancialReportExport($year), $filename);
+    }
+
+    public function exportResidents()
+    {
+        $filename = 'Data_Warga_SAB_' . now()->format('Y-m-d') . '.xlsx';
+
+        return Excel::download(new ResidentsExport(), $filename);
     }
 }

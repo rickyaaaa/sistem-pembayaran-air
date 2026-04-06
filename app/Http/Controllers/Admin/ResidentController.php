@@ -6,7 +6,6 @@ use App\Http\Requests\Admin\ResidentRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Resident;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ResidentController extends Controller
 {
@@ -26,7 +25,20 @@ class ResidentController extends Controller
             $query->where('is_active', $request->input('status') === 'active');
         }
 
-        $residents = $query->orderBy('block')->orderBy('house_number')->paginate(15);
+        if ($unpaidMonth = $request->input('unpaid_month')) {
+            $year = $request->input('year', now()->year);
+            $monthFn = \App\Helpers\DatabaseHelper::getMonthFunction('payment_date');
+            $yearFn = \App\Helpers\DatabaseHelper::getYearFunction('payment_date');
+            
+            // Warga deemed unpaid if they have NO confirmed payment in that month and year
+            $query->whereDoesntHave('payments', function ($q) use ($unpaidMonth, $year, $monthFn, $yearFn) {
+                $q->where('status', \App\Enums\PaymentStatus::Confirmed)
+                  ->whereRaw("{$monthFn} = ?", [(int)$unpaidMonth])
+                  ->whereRaw("{$yearFn} = ?", [(int)$year]);
+            });
+        }
+
+        $residents = $query->orderBy('block')->orderBy('house_number')->paginate(15)->withQueryString();
 
         return view('admin.residents.index', compact('residents'));
     }

@@ -11,14 +11,15 @@ use Illuminate\Notifications\Notifiable;
  * @property string $username
  * @property string $name
  * @property string $password
- * @property string $role
+ * @property string $role  'admin' | 'pengurus'
  * @property string|null $remember_token
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
  */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
+
+    const ROLE_ADMIN = 'admin';
+    const ROLE_PENGURUS = 'pengurus';
 
     protected $fillable = [
         'username',
@@ -41,8 +42,22 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === self::ROLE_ADMIN;
     }
 
+    public function isPengurus(): bool
+    {
+        return $this->role === self::ROLE_PENGURUS;
+    }
 
+    public function isStaff(): bool
+    {
+        // Returns true for both admin and pengurus (any authenticated staff)
+        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_PENGURUS]);
+    }
+
+    public function changeRequests()
+    {
+        return $this->hasMany(ChangeRequest::class, 'requested_by');
+    }
 }

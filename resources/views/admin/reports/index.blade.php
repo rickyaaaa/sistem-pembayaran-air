@@ -1,8 +1,18 @@
 <x-app-layout>
     <x-slot name="title">Laporan Keuangan</x-slot>
 
-    <!-- Year Filter -->
-    <div class="d-flex justify-content-end mb-3 animate-in">
+    <!-- Year Filter and Exports -->
+    <div class="d-flex justify-content-between align-items-center mb-3 animate-in flex-wrap gap-2">
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.reports.export-financial', ['year' => $year]) }}"
+               class="btn btn-success btn-sm">
+                <i class="bi bi-file-earmark-excel me-1"></i> Export Laporan {{ $year }}
+            </a>
+            <a href="{{ route('admin.reports.export-residents') }}"
+               class="btn btn-outline-success btn-sm">
+                <i class="bi bi-people me-1"></i> Export Data Warga
+            </a>
+        </div>
         <form method="GET" class="d-flex align-items-center gap-2">
             <label class="form-label mb-0 text-muted" style="font-size:0.8125rem;">Tahun:</label>
             <select name="year" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">

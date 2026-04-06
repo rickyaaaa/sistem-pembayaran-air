@@ -10,8 +10,8 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() || !$request->user()->isAdmin()) {
-            abort(403, 'Akses ditolak. Anda bukan admin.');
+        if (!$request->user() || !$request->user()->isStaff()) {
+            abort(403, 'Akses ditolak.');
         }
 
         return $next($request);

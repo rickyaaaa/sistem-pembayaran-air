@@ -14,13 +14,22 @@ class FinancialReportService
     public function getSummary(int $year): array
     {
         $totalIncome = Payment::where('status', PaymentStatus::Confirmed)
-            ->whereYear('payment_date', $year)
+            ->where(function($q) use ($year) {
+                $func = \App\Helpers\DatabaseHelper::getYearFunction('payment_date');
+                $q->whereRaw("{$func} = ?", [$year]);
+            })
             ->sum('amount_paid');
 
-        $totalRegistrations = Registration::whereYear('payment_date', $year)
+        $totalRegistrations = Registration::where(function($q) use ($year) {
+                $func = \App\Helpers\DatabaseHelper::getYearFunction('payment_date');
+                $q->whereRaw("{$func} = ?", [$year]);
+            })
             ->sum('amount');
 
-        $totalExpenses = Expense::whereYear('date', $year)
+        $totalExpenses = Expense::where(function($q) use ($year) {
+                $func = \App\Helpers\DatabaseHelper::getYearFunction('date');
+                $q->whereRaw("{$func} = ?", [$year]);
+            })
             ->sum('amount');
 
         return [
@@ -72,18 +81,30 @@ class FinancialReportService
 
     public function getAvailableYears(): array
     {
-        $yearFn = DatabaseHelper::getYearFunction('payment_date');
-
-        $years = Payment::selectRaw("DISTINCT {$yearFn} as year")
-            ->orderByDesc('year')
+        $pYearFunc = \App\Helpers\DatabaseHelper::getYearFunction('payment_date');
+        $paymentYears = \App\Models\Payment::selectRaw("DISTINCT {$pYearFunc} as year")
             ->pluck('year')
             ->map(fn($y) => (int) $y)
             ->toArray();
 
+        $billYears = \App\Models\Bill::selectRaw('DISTINCT year')
+            ->pluck('year')
+            ->map(fn($y) => (int) $y)
+            ->toArray();
+
+        $eYearFunc = \App\Helpers\DatabaseHelper::getYearFunction('date');
+        $expenseYears = \App\Models\Expense::selectRaw("DISTINCT {$eYearFunc} as year")
+            ->pluck('year')
+            ->map(fn($y) => (int) $y)
+            ->toArray();
+
+        $years = array_values(array_unique(array_merge($paymentYears, $billYears, $expenseYears)));
+
         if (!in_array(now()->year, $years)) {
             $years[] = now()->year;
-            rsort($years);
         }
+
+        rsort($years);
 
         return $years;
     }

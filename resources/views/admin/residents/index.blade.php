@@ -9,21 +9,39 @@
     </div>
 
     <!-- Filter -->
-    <form method="GET" class="filter-bar">
-        <div class="form-group">
-            <label class="form-label">Cari</label>
-            <input type="text" name="search" class="form-control" placeholder="Nama / No. Blok" value="{{ request('search') }}">
+    <form method="GET" class="filter-bar flex-wrap align-items-end mb-3 mt-2 gap-2" style="display:flex;">
+        <div class="form-group mb-0">
+            <label class="form-label mb-1" style="font-size:0.8rem;">Cari Blok / Nama</label>
+            <input type="text" name="search" class="form-control form-control-sm" placeholder="Nama / No. Blok" value="{{ request('search') }}">
         </div>
-        <div class="form-group" style="flex:0 0 auto;">
-            <label class="form-label">Status</label>
-            <select name="status" class="form-select">
+        <div class="form-group mb-0" style="flex:0 0 auto;">
+            <label class="form-label mb-1" style="font-size:0.8rem;">Tahun Lunas</label>
+            <input type="number" name="year" class="form-control form-control-sm" placeholder="Tahun" value="{{ request('year', now()->year) }}" style="width: 80px;">
+        </div>
+        <div class="form-group mb-0" style="flex:0 0 auto;">
+            <label class="form-label mb-1" style="font-size:0.8rem;">Belum Lunas Di</label>
+            <select name="unpaid_month" class="form-select form-select-sm" style="width: auto;">
+                <option value="">Bebas (Semua)</option>
+                @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $idx => $mName)
+                    <option value="{{ $idx + 1 }}" {{ request('unpaid_month') == ($idx + 1) ? 'selected' : '' }}>
+                        {{ $mName }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="form-group mb-0" style="flex:0 0 auto;">
+            <label class="form-label mb-1" style="font-size:0.8rem;">Status</label>
+            <select name="status" class="form-select form-select-sm" style="width: auto;">
                 <option value="">Semua</option>
                 <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
                 <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Non-Aktif</option>
             </select>
         </div>
-        <div style="flex:0 0 auto;">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+        <div class="form-group mb-0" style="flex:0 0 auto;">
+            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Filter</button>
+            @if(request()->anyFilled(['search', 'unpaid_month', 'status']) || request('year') != now()->year)
+                <a href="{{ route('admin.residents.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+            @endif
         </div>
     </form>
 

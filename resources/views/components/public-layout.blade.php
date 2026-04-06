@@ -145,7 +145,17 @@
                 <a href="{{ route('resident.payments.history') }}"
                    class="pub-nav-link {{ request()->routeIs('resident.payments.*') ? 'active' : '' }}">
                     <i class="bi bi-clock-history"></i>
-                    <span class="d-none d-sm-inline">Riwayat</span>
+                    <span class="d-none d-lg-inline">Riwayat</span>
+                </a>
+                <a href="{{ route('resident.documents.index') }}"
+                   class="pub-nav-link {{ request()->routeIs('resident.documents.*') ? 'active' : '' }}">
+                    <i class="bi bi-folder-fill"></i>
+                    <span class="d-none d-lg-inline">Dokumen</span>
+                </a>
+                <a href="{{ route('resident.announcements.index') }}"
+                   class="pub-nav-link {{ request()->routeIs('resident.announcements.*') ? 'active' : '' }}">
+                    <i class="bi bi-megaphone-fill"></i>
+                    <span class="d-none d-lg-inline">Berita</span>
                 </a>
 
                 @auth

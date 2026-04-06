@@ -59,18 +59,8 @@ class DashboardController extends Controller
             ->orderByDesc('date')
             ->get();
 
-        $availableYears = Bill::selectRaw('DISTINCT year')
-            ->orderByDesc('year')
-            ->pluck('year')
-            ->toArray();
-
-        if (!in_array($year, $availableYears)) {
-            $availableYears[] = (int) $year;
-        }
-        if (!in_array(now()->year, $availableYears)) {
-            $availableYears[] = now()->year;
-        }
-        rsort($availableYears);
+        $currentYear = now()->year;
+        $availableYears = range($currentYear + 2, $currentYear - 3);
 
         $monthFn = DatabaseHelper::getMonthFunction('payments.payment_date');
 
@@ -83,9 +73,13 @@ class DashboardController extends Controller
             ->get();
 
         // Get all active units
-        $units = Resident::where('is_active', true)
-            ->orderBy('block_number')
-            ->pluck('block_number');
+        $unitQuery = Resident::where('is_active', true);
+        
+        if ($blockSearch = $request->input('block_search')) {
+            $unitQuery->where('block_number', 'like', "%{$blockSearch}%");
+        }
+        
+        $units = $unitQuery->orderBy('block_number')->pluck('block_number');
 
         $blockMonthlyIncome = [];
         foreach ($units as $house) {
@@ -95,6 +89,19 @@ class DashboardController extends Controller
             if (isset($blockMonthlyIncome[$row->house])) {
                 $blockMonthlyIncome[$row->house][(int)$row->month] = (float)$row->total;
             }
+        }
+
+        // Filter by unpaid month (where amount is 0)
+        if ($unpaidMonth = (int) $request->input('unpaid_month')) {
+            if ($unpaidMonth >= 1 && $unpaidMonth <= 12) {
+                $blockMonthlyIncome = array_filter($blockMonthlyIncome, function($months) use ($unpaidMonth) {
+                    return $months[$unpaidMonth] <= 0;
+                });
+            }
+        }
+
+        if ($request->ajax() && $request->input('partial') === 'matrix') {
+            return view('admin.partials.dashboard_matrix_table', compact('blockMonthlyIncome', 'year'));
         }
 
         return view('admin.dashboard', compact(

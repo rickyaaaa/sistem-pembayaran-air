@@ -124,7 +124,7 @@
                     @forelse($recentPayments as $payment)
                         <div class="d-flex align-items-center gap-3 px-3 py-2 border-bottom">
                             <div class="flex-grow-1">
-                                <div class="fw-semibold" style="font-size:0.8125rem;">{{ $payment->resident->name ?? '-' }}
+                                <div class="fw-semibold" style="font-size:0.8125rem;">Blok {{ $payment->resident ? strtoupper($payment->resident->block_number) : '-' }}
                                 </div>
                                 <div class="text-muted" style="font-size:0.75rem;">{{ $payment->bill->period ?? '-' }}</div>
                             </div>
@@ -218,36 +218,68 @@
 
     <!-- Matrix -->
     <div class="table-wrapper mt-4 animate-in">
-        <div class="card-header">
+        <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <span><i class="bi bi-grid me-2"></i>Matrix Pemasukan Per Blok {{ $year }}</span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-sm mb-0">
-                <thead>
-                    <tr>
-                        <th class="ps-3">Blok</th>
-                        @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'] as $mn)
-                            <th class="text-end">{{ $mn }}</th>
-                        @endforeach
-                        <th class="text-end pe-3">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($blockMonthlyIncome as $blok => $months)
-                        <tr>
-                            <td class="fw-semibold ps-3">{{ $blok }}</td>
-                            @for($m = 1; $m <= 12; $m++)
-                                <td class="text-end" style="font-size:.8rem;">
-                                    {{ $months[$m] > 0 ? number_format($months[$m] / 1000, 0) . 'k' : '-' }}
-                                </td>
-                            @endfor
-                            <td class="text-end fw-semibold pe-3 text-primary">
-                                Rp {{ number_format(array_sum($months), 0, ',', '.') }}
-                            </td>
-                        </tr>
+            <form id="matrix-filter-form" method="GET" action="{{ route('admin.dashboard') }}" class="d-flex flex-wrap align-items-center gap-2">
+                <input type="hidden" name="year" value="{{ $year }}">
+                
+                <input type="text" name="block_search" value="{{ request('block_search') }}" 
+                    class="form-select form-select-sm" style="width: 100px;" placeholder="Cari Blok...">
+                
+                <select name="unpaid_month" class="form-select form-select-sm" style="width: auto;">
+                    <option value="">Status Bayar: Semua</option>
+                    @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $idx => $mName)
+                        <option value="{{ $idx + 1 }}" {{ request('unpaid_month') == ($idx + 1) ? 'selected' : '' }}>
+                            Belum Lunas: {{ $mName }}
+                        </option>
                     @endforeach
-                </tbody>
-            </table>
+                </select>
+                
+                <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                @if(request('block_search') || request('unpaid_month'))
+                    <a href="{{ route('admin.dashboard', ['year' => $year]) }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                @endif
+                <div class="spinner-border spinner-border-sm text-primary d-none ms-1" id="matrix-spinner" role="status"></div>
+            </form>
+        </div>
+        <div class="table-responsive" id="matrix-container">
+            @include('admin.partials.dashboard_matrix_table')
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const matrixForm = document.getElementById('matrix-filter-form');
+            if (matrixForm) {
+                matrixForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const btn = this.querySelector('button[type="submit"]');
+                    const spinner = document.getElementById('matrix-spinner');
+                    btn.disabled = true;
+                    spinner.classList.remove('d-none');
+
+                    const url = new URL(this.action || window.location.href);
+                    const formData = new FormData(this);
+                    formData.forEach((value, key) => url.searchParams.set(key, value));
+                    url.searchParams.set('partial', 'matrix');
+
+                    fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(res => res.text())
+                    .then(html => {
+                        document.getElementById('matrix-container').innerHTML = html;
+                        btn.disabled = false;
+                        spinner.classList.add('d-none');
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        btn.disabled = false;
+                        spinner.classList.add('d-none');
+                        window.location.href = url.toString().replace('&partial=matrix', '');
+                    });
+                });
+            }
+        });
+    </script>
 </x-app-layout>

@@ -86,6 +86,10 @@ class RegistrationController extends Controller
 
     public function destroy(Registration $registration)
     {
+        if (auth()->user()->isPengurus()) {
+            return back()->withErrors(['error' => 'Pengurus tidak bisa menghapus data pemasukan. Hubungi Admin.']);
+        }
+
         $registration->delete();
 
         return redirect()->route('admin.registrations.index')

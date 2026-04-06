@@ -47,6 +47,8 @@
                 <div class="sidebar-user-role">
                     @if(Auth::user()->isAdmin())
                         <span class="badge bg-primary bg-opacity-25 text-primary">Admin</span>
+                    @elseif(Auth::user()->isPengurus())
+                        <span class="badge bg-info bg-opacity-25 text-info">Pengurus</span>
                     @else
                         <span class="badge bg-success bg-opacity-25 text-success">Warga</span>
                     @endif
@@ -55,13 +57,25 @@
         </div>
 
         <ul class="sidebar-nav">
-            @if(Auth::user()->isAdmin())
+            @if(Auth::user()->isStaff())
                 <li class="sidebar-nav-item">
                     <a href="{{ route('admin.dashboard') }}" class="sidebar-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <i class="bi bi-speedometer2"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
+                @if(auth()->user()->isAdmin())
+                    @php $pendingChangesCount = \App\Models\ChangeRequest::where('status', 'pending')->count(); @endphp
+                    <li class="sidebar-nav-item">
+                        <a href="{{ route('admin.change-requests.index') }}" class="sidebar-nav-link {{ request()->routeIs('admin.change-requests.*') ? 'active' : '' }}">
+                            <i class="bi bi-clipboard-check"></i>
+                            <span>Permintaan</span>
+                            @if($pendingChangesCount > 0)
+                                <span class="badge bg-danger ms-auto">{{ $pendingChangesCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                @endif
                 <li class="sidebar-nav-item">
                     <a href="{{ route('admin.residents.index') }}" class="sidebar-nav-link {{ request()->routeIs('admin.residents.*') ? 'active' : '' }}">
                         <i class="bi bi-people"></i>
@@ -104,6 +118,18 @@
                         <span>Laporan</span>
                     </a>
                 </li>
+                <li class="sidebar-nav-item">
+                    <a href="{{ route('admin.documents.index') }}" class="sidebar-nav-link {{ request()->routeIs('admin.documents.*') ? 'active' : '' }}">
+                        <i class="bi bi-folder-fill"></i>
+                        <span>Dokumen</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="{{ route('admin.announcements.index') }}" class="sidebar-nav-link {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
+                        <i class="bi bi-megaphone-fill"></i>
+                        <span>Berita</span>
+                    </a>
+                </li>
             @else
                 <li class="sidebar-nav-item">
                     <a href="{{ route('resident.dashboard') }}" class="sidebar-nav-link {{ request()->routeIs('resident.dashboard') ? 'active' : '' }}">
@@ -121,6 +147,18 @@
                     <a href="{{ route('resident.payments.history') }}" class="sidebar-nav-link {{ request()->routeIs('resident.payments.*') ? 'active' : '' }}">
                         <i class="bi bi-clock-history"></i>
                         <span>Riwayat Bayar</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="{{ route('resident.documents.index') }}" class="sidebar-nav-link {{ request()->routeIs('resident.documents.*') ? 'active' : '' }}">
+                        <i class="bi bi-folder-fill"></i>
+                        <span>Dokumen</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="{{ route('resident.announcements.index') }}" class="sidebar-nav-link {{ request()->routeIs('resident.announcements.*') ? 'active' : '' }}">
+                        <i class="bi bi-megaphone-fill"></i>
+                        <span>Berita</span>
                     </a>
                 </li>
             @endif

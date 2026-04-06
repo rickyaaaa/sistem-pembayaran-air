@@ -18,7 +18,7 @@
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person"></i></span>
                     <input type="text" class="form-control @error('username') is-invalid @enderror" id="username"
-                        name="username" value="{{ old('username') }}" placeholder="Contoh: a1" required autofocus>
+                        name="username" value="{{ old('username') }}" placeholder="Masukkan username" required autofocus>
                 </div>
                 @error('username')
                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -46,5 +46,15 @@
                 <i class="bi bi-box-arrow-in-right me-1"></i> Masuk
             </button>
         </form>
+
+        <div class="d-flex align-items-center my-3">
+            <hr class="flex-grow-1">
+            <span class="mx-2 text-muted" style="font-size:.8rem;">atau</span>
+            <hr class="flex-grow-1">
+        </div>
+
+        <a href="{{ route('resident.dashboard') }}" class="btn btn-outline-secondary w-100">
+            <i class="bi bi-house-door me-1"></i> Lihat Dashboard Warga
+        </a>
     </div>
 </x-guest-layout>

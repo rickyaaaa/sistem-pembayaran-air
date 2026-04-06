@@ -56,6 +56,19 @@
                             @error('proof_file')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
+                        @if(auth()->user()->isPengurus())
+                            <div class="alert alert-info py-2" style="font-size:.85rem;">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Sebagai Pengurus, perubahan ini akan dikirim sebagai <strong>permintaan persetujuan</strong> ke Admin.
+                            </div>
+                            <div class="mb-3">
+                                <label for="reason" class="form-label fw-semibold">Alasan Perubahan</label>
+                                <input type="text" name="reason" class="form-control @error('reason') is-invalid @enderror"
+                                       placeholder="Contoh: Salah input nominal" required>
+                                @error('reason')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        @endif
+
                         <div class="d-flex gap-2 mt-4">
                             <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> Simpan</button>
                             <a href="{{ route('admin.expenses.index') }}" class="btn btn-outline-secondary">Batal</a>

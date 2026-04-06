@@ -9,6 +9,7 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -46,14 +47,15 @@ class PaymentController extends Controller
             return back()->withErrors(['error' => 'Pembayaran ini sudah diproses.']);
         }
 
-        $payment->update([
-            'status' => PaymentStatus::Confirmed,
-            'confirmed_by' => Auth::id(),
-            'confirmed_at' => now(),
-        ]);
+        DB::transaction(function () use ($payment) {
+            $payment->update([
+                'status'       => PaymentStatus::Confirmed,
+                'confirmed_by' => Auth::id(),
+                'confirmed_at' => now(),
+            ]);
 
-        // Update bill status to paid
-        $payment->bill->update(['status' => BillStatus::Paid]);
+            $payment->bill->update(['status' => BillStatus::Paid]);
+        });
 
         return redirect()->route('admin.payments.index')
             ->with('success', 'Pembayaran berhasil dikonfirmasi.');
@@ -69,15 +71,16 @@ class PaymentController extends Controller
             return back()->withErrors(['error' => 'Pembayaran ini sudah diproses.']);
         }
 
-        $payment->update([
-            'status' => PaymentStatus::Rejected,
-            'confirmed_by' => Auth::id(),
-            'confirmed_at' => now(),
-            'notes' => $validated['notes'],
-        ]);
+        DB::transaction(function () use ($payment, $validated) {
+            $payment->update([
+                'status'       => PaymentStatus::Rejected,
+                'confirmed_by' => Auth::id(),
+                'confirmed_at' => now(),
+                'notes'        => $validated['notes'],
+            ]);
 
-        // Revert bill status to unpaid
-        $payment->bill->update(['status' => BillStatus::Unpaid]);
+            $payment->bill->update(['status' => BillStatus::Unpaid]);
+        });
 
         return redirect()->route('admin.payments.index')
             ->with('success', 'Pembayaran berhasil ditolak.');

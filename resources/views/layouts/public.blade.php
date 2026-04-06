@@ -153,7 +153,8 @@
                 </a>
 
                 @auth
-                    @if(Auth::user()->isAdmin())
+                    @auth
+                    @if(Auth::user()->isStaff())
                         <a href="{{ route('admin.dashboard') }}" class="admin-link ms-2">
                             <i class="bi bi-shield-lock me-1"></i>Admin
                         </a>

@@ -53,19 +53,8 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $isSqliteYear = config('database.default') === 'sqlite';
-        $yearFn = $isSqliteYear ? "strftime('%Y', payment_date)" : "YEAR(payment_date)";
-
-        $availableYears = Payment::selectRaw("DISTINCT {$yearFn} as year")
-            ->orderByDesc('year')
-            ->pluck('year')
-            ->map(fn($y) => (int) $y)
-            ->toArray();
-
-        if (!in_array(now()->year, $availableYears)) {
-            $availableYears[] = now()->year;
-            rsort($availableYears);
-        }
+        $currentYear = now()->year;
+        $availableYears = range($currentYear + 2, $currentYear - 3);
 
         $monthFn = DatabaseHelper::getMonthFunction('payments.payment_date');
 
@@ -77,9 +66,11 @@ class DashboardController extends Controller
             ->orderBy('house')
             ->get();
 
-        $units = Resident::where('is_active', true)
-            ->orderBy('block_number')
-            ->pluck('block_number');
+        $unitQuery = Resident::where('is_active', true);
+        if ($blockSearch = $request->input('block_search')) {
+            $unitQuery->where('block_number', 'like', "%{$blockSearch}%");
+        }
+        $units = $unitQuery->orderBy('block_number')->pluck('block_number');
 
         $blockMonthlyIncome = [];
         foreach ($units as $house) {
@@ -89,6 +80,18 @@ class DashboardController extends Controller
             if (isset($blockMonthlyIncome[$row->house])) {
                 $blockMonthlyIncome[$row->house][(int) $row->month] = (float) $row->total;
             }
+        }
+
+        if ($unpaidMonth = (int) $request->input('unpaid_month')) {
+            if ($unpaidMonth >= 1 && $unpaidMonth <= 12) {
+                $blockMonthlyIncome = array_filter($blockMonthlyIncome, function($months) use ($unpaidMonth) {
+                    return $months[$unpaidMonth] <= 0;
+                });
+            }
+        }
+
+        if ($request->ajax() && $request->input('partial') === 'matrix') {
+            return view('admin.partials.dashboard_matrix_table', compact('blockMonthlyIncome', 'year'));
         }
 
         return view('resident.dashboard', compact(

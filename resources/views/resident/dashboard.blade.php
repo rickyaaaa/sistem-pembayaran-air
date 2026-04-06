@@ -247,53 +247,40 @@
     </div>
 
     {{-- ===== BLOCK MONTHLY INCOME MATRIX ===== --}}
-    <div class="card border-0 shadow-sm animate-in mt-4" style="border-radius:14px;">
-        <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between py-3 px-4"
+    <div class="card border-0 shadow-sm animate-in mt-4" style="border-radius:14px;" id="matrix-section">
+        <div class="card-header bg-white border-0 d-flex flex-column flex-md-row align-items-md-center justify-content-between py-3 px-4 gap-3"
              style="border-radius:14px 14px 0 0;border-bottom:1px solid #f1f5f9;">
             <span class="fw-semibold" style="font-size:.9375rem;">
                 <i class="bi bi-grid me-2 text-primary"></i>Pemasukan per No. Blok per Bulan
             </span>
-            <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size:.72rem;">{{ $year }}</span>
+            <form id="resident-matrix-filter-form" method="GET" action="{{ route('resident.dashboard') }}" class="d-flex flex-wrap align-items-center gap-2 m-0">
+                <input type="hidden" name="year" value="{{ $year }}">
+                <input type="text" name="block_search" value="{{ request('block_search') }}" 
+                    class="form-control form-control-sm" style="width: 100px;" placeholder="Cari Blok...">
+                
+                <select name="unpaid_month" class="form-select form-select-sm" style="width: auto;">
+                    <option value="">Status Bayar: Semua</option>
+                    @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $idx => $mName)
+                        <option value="{{ $idx + 1 }}" {{ request('unpaid_month') == ($idx + 1) ? 'selected' : '' }}>
+                            Belum Lunas: {{ $mName }}
+                        </option>
+                    @endforeach
+                </select>
+                
+                <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                @if(request('block_search') || request('unpaid_month'))
+                    <a href="{{ route('resident.dashboard', ['year' => $year]) }}#matrix-section" class="btn btn-sm btn-outline-secondary">Reset</a>
+                @endif
+                <div class="spinner-border spinner-border-sm text-primary d-none ms-1" id="resident-matrix-spinner" role="status"></div>
+            </form>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0" style="font-size:.875rem;">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">No. Blok</th>
-                            @foreach(['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'] as $mn)
-                                <th class="text-end">{{ $mn }}</th>
-                            @endforeach
-                            <th class="text-end pe-4">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($blockMonthlyIncome as $blok => $months)
-                            <tr>
-                                <td class="ps-4 fw-semibold">{{ $blok }}</td>
-                                @for($m = 1; $m <= 12; $m++)
-                                    <td class="text-end text-muted" style="font-size:.8rem;">
-                                        {{ $months[$m] > 0 ? number_format($months[$m]/1000,0).'k' : '-' }}
-                                    </td>
-                                @endfor
-                                <td class="text-end pe-4 fw-semibold text-primary">
-                                    Rp {{ number_format(array_sum($months),0,',','.') }}
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="14" class="text-center py-4 text-muted">
-                                    Belum ada pemasukan yang bisa ditampilkan
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="table-responsive" id="resident-matrix-container">
+                @include('admin.partials.dashboard_matrix_table')
             </div>
         </div>
     </div>
 
-    @push('scripts')
     <script>
         // Animate cards on scroll
         const observer = new IntersectionObserver((entries) => {
@@ -304,6 +291,35 @@
             });
         }, { threshold: 0.1 });
         document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const matrixForm = document.getElementById('resident-matrix-filter-form');
+            if (matrixForm) {
+                matrixForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const btn = this.querySelector('button[type="submit"]');
+                    const spinner = document.getElementById('resident-matrix-spinner');
+                    btn.disabled = true;
+                    spinner.classList.remove('d-none');
+
+                    const url = new URL(this.action || window.location.href);
+                    const formData = new FormData(this);
+                    formData.forEach((value, key) => url.searchParams.set(key, value));
+                    url.searchParams.set('partial', 'matrix');
+
+                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(res => res.text())
+                    .then(html => {
+                        document.getElementById('resident-matrix-container').innerHTML = html;
+                        btn.disabled = false;
+                        spinner.classList.add('d-none');
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        window.location.href = url.toString().replace('&partial=matrix', '');
+                    });
+                });
+            }
+        });
     </script>
-    @endpush
 </x-public-layout>

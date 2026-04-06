@@ -12,20 +12,20 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Redirect root to public resident dashboard
+// Redirect root
 Route::get('/', function () {
-    if (Auth::check() && Auth::user()->isAdmin()) {
+    if (Auth::check() && Auth::user()->isStaff()) {
         return redirect()->route('admin.dashboard');
     }
-    return redirect()->route('resident.dashboard');
+    return redirect()->route('login');
 });
 
 // Redirect generic dashboard
 Route::get('/dashboard', function () {
-    if (Auth::check() && Auth::user()->isAdmin()) {
+    if (Auth::check() && Auth::user()->isStaff()) {
         return redirect()->route('admin.dashboard');
     }
-    return redirect()->route('resident.dashboard');
+    return redirect()->route('login');
 })->name('dashboard');
 
 // Change password (all authenticated roles)
@@ -48,6 +48,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Bills Management
     Route::resource('bills', Admin\BillController::class)->except(['show']);
+    Route::post('bills/{bill}/mark-paid', [Admin\BillController::class, 'markPaid'])->name('bills.mark-paid');
 
     // Payment Confirmation
     Route::get('payments', [Admin\PaymentController::class, 'index'])->name('payments.index');
@@ -65,6 +66,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Reports
     Route::get('reports', [Admin\ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/export-financial', [Admin\ReportController::class, 'exportFinancial'])->name('reports.export-financial');
+    Route::get('reports/export-residents', [Admin\ReportController::class, 'exportResidents'])->name('reports.export-residents');
+
+    // Documents
+    Route::resource('documents', Admin\DocumentController::class)->except(['show', 'edit', 'update']);
+    Route::get('documents/{document}/download', [Admin\DocumentController::class, 'download'])->name('documents.download');
+
+    // Announcements
+    Route::resource('announcements', Admin\AnnouncementController::class)->except(['show']);
+
+    // Change Requests (admin approval for pengurus edits)
+    Route::get('change-requests', [Admin\ChangeRequestController::class, 'index'])->name('change-requests.index')->middleware('super_admin');
+    Route::post('change-requests/{changeRequest}/approve', [Admin\ChangeRequestController::class, 'approve'])->name('change-requests.approve')->middleware('super_admin');
+    Route::post('change-requests/{changeRequest}/reject', [Admin\ChangeRequestController::class, 'reject'])->name('change-requests.reject')->middleware('super_admin');
 });
 
 /*
@@ -95,6 +110,14 @@ Route::prefix('warga')->name('resident.')->group(function () {
     Route::get('/pengeluaran/{expense}/bukti', [Resident\ExpenseProofController::class, 'show'])
         ->middleware('throttle:30,1')
         ->name('expenses.proof');
+
+    // Documents and Announcements
+    Route::get('/dokumen', [Resident\DocumentController::class, 'index'])->name('documents.index');
+    Route::get('/dokumen/{document}/download', [Resident\DocumentController::class, 'download'])
+        ->middleware('throttle:20,1')
+        ->name('documents.download');
+    Route::get('/berita', [Resident\AnnouncementController::class, 'index'])->name('announcements.index');
+    Route::get('/berita/{announcement}', [Resident\AnnouncementController::class, 'show'])->name('announcements.show');
 });
 
 require __DIR__.'/auth.php';

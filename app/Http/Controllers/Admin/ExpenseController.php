@@ -8,6 +8,7 @@ use App\Models\Expense;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ChangeRequest;
 
 class ExpenseController extends Controller
 {
@@ -67,6 +68,22 @@ class ExpenseController extends Controller
     {
         $validated = $request->validated();
 
+        // Pengurus tidak bisa edit pengeluaran langsung
+        if (auth()->user()->isPengurus()) {
+            ChangeRequest::create([
+                'model_type'     => \App\Models\Expense::class,
+                'model_id'       => $expense->id,
+                'original_data'  => $expense->only(['date', 'amount', 'description', 'category']),
+                'requested_data' => $request->only(['date', 'amount', 'description', 'category']),
+                'reason'         => $request->input('reason', 'Diajukan oleh pengurus'),
+                'status'         => 'pending',
+                'requested_by'   => auth()->id(),
+            ]);
+
+            return redirect()->route('admin.expenses.index')
+                ->with('info', 'Permintaan perubahan pengeluaran menunggu persetujuan Admin.');
+        }
+
         if ($request->hasFile('proof_file')) {
             // Fix 7: delete old file from private disk
             if ($expense->proof_file) {
@@ -83,6 +100,10 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense)
     {
+        if (auth()->user()->isPengurus()) {
+            return back()->withErrors(['error' => 'Pengurus tidak bisa menghapus pengeluaran. Hubungi Admin.']);
+        }
+
         // Fix 7: delete from private disk
         if ($expense->proof_file) {
             Storage::disk('private')->delete($expense->proof_file);
