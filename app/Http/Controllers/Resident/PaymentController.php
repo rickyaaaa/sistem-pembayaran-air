@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers\Resident;
 
+use App\Enums\BillStatus;
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Bill;
 use App\Models\Payment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class PaymentController extends Controller
 {
     public function create(Bill $bill)
     {
-        if ($bill->status === 'paid') {
+        if ($bill->status === BillStatus::Paid) {
             return back()->with('info', 'Tagihan ini sudah lunas.');
         }
 
-        if ($bill->status === 'pending') {
+        if ($bill->status === BillStatus::Pending) {
             return back()->with('info', 'Pembayaran Anda sedang menunggu konfirmasi.');
         }
 
@@ -27,34 +28,42 @@ class PaymentController extends Controller
 
     public function store(Request $request, Bill $bill)
     {
-        if ($bill->status !== 'unpaid') {
-            return back()->withErrors(['error' => 'Tagihan tidak bisa dibayar saat ini.']);
+        if ($bill->status !== BillStatus::Unpaid) {
+            return back()->with('info', 'Tagihan ini sudah dalam proses atau sudah lunas.');
+        }
+
+        // Block if pending payment already exists
+        if ($bill->payments()->where('status', PaymentStatus::Pending)->exists()) {
+            return back()->with('info', 'Bukti pembayaran sudah dikirim dan sedang menunggu konfirmasi admin.');
         }
 
         $validated = $request->validate([
             'payment_date' => 'required|date|before_or_equal:today',
-            'amount_paid'  => 'required|numeric|min:1',
             'proof_file'   => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'payer_name'   => 'required|string|max:100',
+            'payer_phone'  => 'required|string|max:20',
         ]);
 
-        $proofPath = $request->file('proof_file')->store('payments', 'public');
+        // Amount selalu dari bill, bukan dari request
+        $amountPaid = $bill->amount;
 
-        // Get resident_id directly from the bill relation
-        $bill->load('resident');
-        $residentId = $bill->resident_id;
+        // Store to private disk
+        $proofPath = $request->file('proof_file')->store('payments', 'private');
 
         Payment::create([
             'bill_id'      => $bill->id,
-            'resident_id'  => $residentId,
+            'resident_id'  => $bill->resident_id,
             'payment_date' => $validated['payment_date'],
-            'amount_paid'  => $validated['amount_paid'],
+            'amount_paid'  => $amountPaid,
             'proof_file'   => $proofPath,
-            'status'       => 'pending',
+            'payer_name'   => $validated['payer_name'],
+            'payer_phone'  => $validated['payer_phone'],
+            'status'       => PaymentStatus::Pending,
         ]);
 
-        $bill->update(['status' => 'pending']);
+        $bill->update(['status' => BillStatus::Pending]);
 
-        return redirect()->route('resident.bills.index', ['house_number' => $bill->resident->house_number])
+        return redirect()->route('resident.bills.index', ['house_number' => $bill->resident->block_number])
             ->with('success', 'Bukti pembayaran berhasil dikirim. Menunggu konfirmasi admin.');
     }
 
@@ -65,7 +74,8 @@ class PaymentController extends Controller
         $resident = null;
 
         if ($houseNumber) {
-            $resident = \App\Models\Resident::where('house_number', trim($houseNumber))
+            // Fix 3: case-insensitive search
+            $resident = \App\Models\Resident::whereRaw('LOWER(block_number) = ?', [strtolower(trim($houseNumber))])
                 ->where('is_active', true)
                 ->first();
 

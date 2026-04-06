@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Requests\Admin\ExpenseRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use Illuminate\Http\Request;
@@ -34,19 +35,14 @@ class ExpenseController extends Controller
         return view('admin.expenses.create');
     }
 
-    public function store(Request $request)
+    public function store(ExpenseRequest $request)
     {
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'amount' => 'required|numeric|min:0',
-            'description' => 'required|string|max:500',
-            'category' => 'required|string|max:100',
-            'proof_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
+        $validated = $request->validated();
 
         $proofPath = null;
         if ($request->hasFile('proof_file')) {
-            $proofPath = $request->file('proof_file')->store('expenses', 'public');
+            // Fix 7: store to private disk
+            $proofPath = $request->file('proof_file')->store('expenses', 'private');
         }
 
         Expense::create([
@@ -67,22 +63,16 @@ class ExpenseController extends Controller
         return view('admin.expenses.edit', compact('expense'));
     }
 
-    public function update(Request $request, Expense $expense)
+    public function update(ExpenseRequest $request, Expense $expense)
     {
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'amount' => 'required|numeric|min:0',
-            'description' => 'required|string|max:500',
-            'category' => 'required|string|max:100',
-            'proof_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('proof_file')) {
-            // Delete old file
+            // Fix 7: delete old file from private disk
             if ($expense->proof_file) {
-                Storage::disk('public')->delete($expense->proof_file);
+                Storage::disk('private')->delete($expense->proof_file);
             }
-            $validated['proof_file'] = $request->file('proof_file')->store('expenses', 'public');
+            $validated['proof_file'] = $request->file('proof_file')->store('expenses', 'private');
         }
 
         $expense->update($validated);
@@ -93,13 +83,24 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense)
     {
+        // Fix 7: delete from private disk
         if ($expense->proof_file) {
-            Storage::disk('public')->delete($expense->proof_file);
+            Storage::disk('private')->delete($expense->proof_file);
         }
 
         $expense->delete();
 
         return redirect()->route('admin.expenses.index')
             ->with('success', 'Pengeluaran berhasil dihapus.');
+    }
+
+    // Fix 7: Serve expense proof files from private storage
+    public function viewProof(Expense $expense)
+    {
+        if (!$expense->proof_file || !Storage::disk('private')->exists($expense->proof_file)) {
+            abort(404, 'File bukti tidak ditemukan.');
+        }
+
+        return Storage::disk('private')->response($expense->proof_file);
     }
 }

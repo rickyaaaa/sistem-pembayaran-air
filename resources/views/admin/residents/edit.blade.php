@@ -20,7 +20,7 @@
                         <div class="mb-3">
                             <label for="name" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                   id="name" name="name" value="{{ old('name', $resident->user->name) }}" required>
+                                   id="name" name="name" value="{{ old('name', $resident->name) }}" required>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

@@ -15,7 +15,6 @@ use Illuminate\Notifications\Notifiable;
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Resident|null $resident
  */
 class User extends Authenticatable
 {
@@ -45,13 +44,5 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
-    public function isResident(): bool
-    {
-        return $this->role === 'resident';
-    }
 
-    public function resident()
-    {
-        return $this->hasOne(Resident::class);
-    }
 }

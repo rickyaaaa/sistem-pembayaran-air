@@ -47,7 +47,7 @@
                         <tr>
                             <td>{{ $residents->firstItem() + $i }}</td>
                             <td><span class="fw-semibold">{{ strtoupper($resident->block_number) }}</span></td>
-                            <td>{{ $resident->user->name }}</td>
+                            <td>{{ $resident->name }}</td>
                             <td>{{ $resident->block }}</td>
                             <td>{{ $resident->house_number }}</td>
                             <td>{{ $resident->phone_number ?? '-' }}</td>
@@ -63,13 +63,7 @@
                                     <a href="{{ route('admin.residents.edit', $resident) }}" class="btn btn-sm btn-outline-primary" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form method="POST" action="{{ route('admin.residents.reset-password', $resident) }}" onsubmit="return confirm('Reset password warga ini ke default?')">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Reset Password">
-                                            <i class="bi bi-key"></i>
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{{ route('admin.residents.destroy', $resident) }}" onsubmit="return confirm('Hapus warga ini? Data tagihan terkait juga akan terhapus.')">
+                                    <form method="POST" action="{{ route('admin.residents.destroy', $resident) }}">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">

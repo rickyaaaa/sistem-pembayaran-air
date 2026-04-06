@@ -2,8 +2,9 @@
     <x-slot name="title">Detail Tagihan</x-slot>
 
     <div class="mb-3">
-        <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Kembali
+        <a href="{{ route('resident.bills.index', ['house_number' => $houseNumber ?? '']) }}"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Kembali ke Tagihan
         </a>
     </div>
 
@@ -24,7 +25,7 @@
                     </div>
                     <div class="mb-3 pb-3 border-bottom">
                         <div class="text-muted" style="font-size:.75rem;">STATUS</div>
-                        <div class="mt-1">{!! $bill->status_badge !!}</div>
+                        <div class="mt-1"><x-status-badge :status="$bill->status" /></div>
                     </div>
                     @if($bill->resident)
                         <div>
@@ -35,9 +36,10 @@
                         </div>
                     @endif
 
-                    @if($bill->status === 'unpaid')
+                    @if($bill->status->value === 'unpaid')
                         <div class="mt-4">
-                            <a href="{{ route('resident.payments.create', $bill) }}" class="btn btn-primary">
+                            <a href="{{ route('resident.payments.create', $bill) }}?house_number={{ urlencode($houseNumber ?? '') }}"
+                               class="btn btn-primary">
                                 <i class="bi bi-credit-card me-1"></i>Bayar Sekarang
                             </a>
                         </div>
@@ -63,7 +65,7 @@
                                             {{ $payment->payment_date->format('d F Y') }}
                                         </div>
                                     </div>
-                                    {!! $payment->status_badge !!}
+                                    <x-status-badge :status="$payment->status" />
                                 </div>
                                 @if($payment->notes)
                                     <div class="alert alert-danger py-1 px-2 mb-0" style="font-size:.78rem;">
@@ -71,11 +73,9 @@
                                     </div>
                                 @endif
                                 @if($payment->proof_file)
-                                    <a href="{{ Storage::url($payment->proof_file) }}" target="_blank"
-                                       class="d-inline-flex align-items-center gap-1 mt-2 text-primary text-decoration-none"
-                                       style="font-size:.78rem;">
-                                        <i class="bi bi-file-earmark-image"></i>Lihat Bukti Transfer
-                                    </a>
+                                    <span class="d-inline-flex align-items-center gap-1 mt-2 text-success" style="font-size:.78rem;">
+                                        <i class="bi bi-check-circle-fill"></i>Bukti sudah dikirim
+                                    </span>
                                 @endif
                             </div>
                         @endforeach

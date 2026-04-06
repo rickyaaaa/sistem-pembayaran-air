@@ -41,11 +41,11 @@
                         <tr>
                             <td>{{ $payments->firstItem() + $i }}</td>
                             <td><span class="fw-semibold">{{ strtoupper($payment->resident->block_number) }}</span></td>
-                            <td>{{ $payment->resident->user->name }}</td>
+                            <td>{{ $payment->resident->name }}</td>
                             <td>{{ $payment->bill->period }}</td>
                             <td>{{ $payment->payment_date->format('d/m/Y') }}</td>
                             <td class="text-end">Rp {{ number_format($payment->amount_paid, 0, ',', '.') }}</td>
-                            <td>{!! $payment->status_badge !!}</td>
+                            <td><x-status-badge :status="$payment->status" /></td>
                             <td>
                                 <a href="{{ route('admin.payments.show', $payment) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i> Detail

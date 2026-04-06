@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Resident;
 
+use App\Enums\BillStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Bill;
 use App\Models\Resident;
@@ -21,8 +22,8 @@ class BillController extends Controller
         if ($houseNumber) {
             $searched = true;
 
-            // Find resident by house_number (case-insensitive trim)
-            $resident = Resident::where('house_number', trim($houseNumber))
+            // Fix 3: case-insensitive search by block_number
+            $resident = Resident::whereRaw('LOWER(block_number) = ?', [strtolower(trim($houseNumber))])
                 ->where('is_active', true)
                 ->first();
 
@@ -49,10 +50,22 @@ class BillController extends Controller
         return view('resident.bills.index', compact('bills', 'availableYears', 'resident', 'houseNumber', 'searched'));
     }
 
-    public function show(Bill $bill)
+    // Fix 4: Validate ownership via house_number query param
+    public function show(Request $request, Bill $bill)
     {
+        $houseNumber = $request->query('house_number');
+
+        if (!$houseNumber) {
+            abort(403, 'Anda wajib memasukkan nomor rumah untuk validasi akses.');
+        }
+
+        $ownerBlockNumber = $bill->resident?->block_number;
+        if (!$ownerBlockNumber || strtolower($ownerBlockNumber) !== strtolower(trim($houseNumber))) {
+            abort(403, 'Akses ditolak: Data tagihan tidak sesuai dengan nomor rumah yang Anda masukkan.');
+        }
+
         $bill->load('payments', 'resident');
 
-        return view('resident.bills.show', compact('bill'));
+        return view('resident.bills.show', compact('bill', 'houseNumber'));
     }
 }

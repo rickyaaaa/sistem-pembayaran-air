@@ -94,8 +94,8 @@
                 </li>
                 <li class="sidebar-nav-item">
                     <a href="{{ route('admin.registrations.index') }}" class="sidebar-nav-link {{ request()->routeIs('admin.registrations.*') ? 'active' : '' }}">
-                        <i class="bi bi-person-plus"></i>
-                        <span>Iuran Pendaftaran</span>
+                        <i class="bi bi-cash-coin"></i>
+                        <span>Pemasukan</span>
                     </a>
                 </li>
                 <li class="sidebar-nav-item">

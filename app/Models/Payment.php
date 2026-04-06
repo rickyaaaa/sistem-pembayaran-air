@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,13 +13,15 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon $payment_date
  * @property string $amount_paid
  * @property string $proof_file
- * @property string $status
+ * @property string|null $payer_name
+ * @property string|null $payer_phone
+ * @property PaymentStatus $status
  * @property int|null $confirmed_by
  * @property \Illuminate\Support\Carbon|null $confirmed_at
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read string $status_badge
+ * @property-read \App\Models\Bill $bill
  * @property-read \App\Models\Bill $bill
  * @property-read \App\Models\Resident $resident
  * @property-read \App\Models\User|null $confirmedBy
@@ -27,12 +30,17 @@ class Payment extends Model
 {
     use HasFactory;
 
+    /** Marker untuk payment yang dicatat manual oleh admin (tidak ada file bukti) */
+    public const MANUAL_PROOF = 'manual';
+
     protected $fillable = [
         'bill_id',
         'resident_id',
         'payment_date',
         'amount_paid',
         'proof_file',
+        'payer_name',
+        'payer_phone',
         'status',
         'confirmed_by',
         'confirmed_at',
@@ -43,8 +51,9 @@ class Payment extends Model
     {
         return [
             'payment_date' => 'date',
-            'amount_paid' => 'decimal:2',
+            'amount_paid'  => 'decimal:2',
             'confirmed_at' => 'datetime',
+            'status'       => PaymentStatus::class,
         ];
     }
 
@@ -55,7 +64,7 @@ class Payment extends Model
 
     public function resident()
     {
-        return $this->belongsTo(Resident::class);
+        return $this->belongsTo(Resident::class)->withTrashed();
     }
 
     public function confirmedBy()
@@ -63,13 +72,5 @@ class Payment extends Model
         return $this->belongsTo(User::class, 'confirmed_by');
     }
 
-    public function getStatusBadgeAttribute(): string
-    {
-        return match ($this->status) {
-            'confirmed' => '<span class="badge bg-success">Dikonfirmasi</span>',
-            'pending' => '<span class="badge bg-warning text-dark">Menunggu</span>',
-            'rejected' => '<span class="badge bg-danger">Ditolak</span>',
-            default => '<span class="badge bg-secondary">-</span>',
-        };
-    }
+
 }

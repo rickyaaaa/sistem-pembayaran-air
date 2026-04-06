@@ -2,31 +2,27 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Requests\Admin\ResidentRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Resident;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class ResidentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Resident::with('user');
+        $query = Resident::query();
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('block_number', 'like', "%{$search}%")
                   ->orWhere('block', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+                  ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('is_active', $request->input('status') === 'active');
         }
 
@@ -40,14 +36,9 @@ class ResidentController extends Controller
         return view('admin.residents.create');
     }
 
-    public function store(Request $request)
+    public function store(ResidentRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'block' => 'required|string|max:10',
-            'house_number' => 'required|string|max:10',
-            'phone_number' => 'nullable|string|max:20',
-        ]);
+        $validated = $request->validated();
 
         $blockNumber = strtolower($validated['block'] . $validated['house_number']);
 
@@ -56,70 +47,52 @@ class ResidentController extends Controller
             return back()->withErrors(['block_number' => 'Nomor blok sudah terdaftar.'])->withInput();
         }
 
-        DB::transaction(function () use ($validated, $blockNumber) {
-            $user = User::create([
-                'username' => $blockNumber,
-                'name' => $validated['name'],
-                'password' => Hash::make($blockNumber), // default password = block number
-                'role' => 'resident',
-            ]);
-
-            Resident::create([
-                'user_id' => $user->id,
-                'block_number' => $blockNumber,
-                'block' => strtoupper($validated['block']),
-                'house_number' => $validated['house_number'],
-                'phone_number' => $validated['phone_number'] ?? null,
-                'is_active' => true,
-            ]);
-        });
+        Resident::create([
+            'name' => $validated['name'],
+            'block_number' => $blockNumber,
+            'block' => strtoupper($validated['block']),
+            'house_number' => $validated['house_number'],
+            'phone_number' => $validated['phone_number'] ?? null,
+            'is_active' => true,
+        ]);
 
         return redirect()->route('admin.residents.index')
-            ->with('success', 'Warga berhasil ditambahkan. Password default: ' . $blockNumber);
+            ->with('success', 'Warga berhasil ditambahkan.');
     }
 
     public function edit(Resident $resident)
     {
-        $resident->load('user');
         return view('admin.residents.edit', compact('resident'));
     }
 
-    public function update(Request $request, Resident $resident)
+    public function update(ResidentRequest $request, Resident $resident)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone_number' => 'nullable|string|max:20',
-            'is_active' => 'required|boolean',
-        ]);
+        $validated = $request->validated();
 
-        DB::transaction(function () use ($validated, $resident) {
-            $resident->user->update(['name' => $validated['name']]);
-            $resident->update([
-                'phone_number' => $validated['phone_number'] ?? null,
-                'is_active' => $validated['is_active'],
-            ]);
-        });
+        $resident->update([
+            'name' => $validated['name'],
+            'phone_number' => $validated['phone_number'] ?? null,
+            'is_active' => $validated['is_active'],
+        ]);
 
         return redirect()->route('admin.residents.index')
             ->with('success', 'Data warga berhasil diperbarui.');
     }
 
-    public function resetPassword(Resident $resident)
-    {
-        $resident->user->update([
-            'password' => Hash::make($resident->block_number),
-        ]);
-
-        return back()->with('success', "Password warga {$resident->block_number} berhasil direset ke default.");
-    }
-
+    // Fix 8: Soft delete — checks for unpaid bills first
     public function destroy(Resident $resident)
     {
-        DB::transaction(function () use ($resident) {
-            $resident->user->delete();
-        });
+        $unpaidCount = $resident->bills()
+            ->whereIn('status', [\App\Enums\BillStatus::Unpaid, \App\Enums\BillStatus::Pending])
+            ->count();
+
+        if ($unpaidCount > 0) {
+            return back()->withErrors(['error' => "Warga masih memiliki {$unpaidCount} tagihan yang belum lunas. Selesaikan dulu sebelum menghapus."]);
+        }
+
+        $resident->delete(); // Soft delete — data tetap ada di DB
 
         return redirect()->route('admin.residents.index')
-            ->with('success', 'Warga berhasil dihapus.');
+            ->with('success', 'Warga berhasil dinonaktifkan.');
     }
 }

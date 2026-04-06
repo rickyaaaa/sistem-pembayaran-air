@@ -8,57 +8,47 @@ use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\Resident;
+use App\Services\FinancialReportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use App\Helpers\DatabaseHelper;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, FinancialReportService $reportService)
     {
-        $year = $request->input('year', now()->year);
+        $year = (int) $request->input('year', now()->year);
 
-        // Total income from confirmed payments this year
-        $totalIncome = Payment::where('status', 'confirmed')
-            ->whereYear('payment_date', $year)
-            ->sum('amount_paid');
+        // Fix 11: Use shared service for financial summary
+        $summary = Cache::remember("admin_dashboard_summary_{$year}", 300, function () use ($reportService, $year) {
+            return $reportService->getSummary($year);
+        });
 
-        // Total expenses this year
-        $totalExpenses = Expense::whereYear('date', $year)->sum('amount');
+        $totalIncome        = $summary['total_income'];
+        $totalRegistrations = $summary['total_registrations'];
+        $totalExpenses      = $summary['total_expenses'];
+        $currentBalance     = $summary['current_balance'];
 
-        // Total registration fees this year
-        $totalRegistrations = Registration::whereYear('payment_date', $year)->sum('amount');
-
-        // Current balance
-        $currentBalance = ($totalIncome + $totalRegistrations) - $totalExpenses;
-
-        // Monthly income breakdown
-        $monthlyIncome = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $monthlyIncome[$m] = Payment::where('status', 'confirmed')
-                ->whereYear('payment_date', $year)
-                ->whereMonth('payment_date', $m)
-                ->sum('amount_paid');
-        }
+        // Fix 11: Monthly breakdown via service
+        $monthlyIncomeRaw = $reportService->getMonthlyBreakdown($year);
+        $monthlyIncome    = array_map(fn($m) => $m['income'], $monthlyIncomeRaw);
 
         // Pending payments count
-        $pendingPayments = Payment::where('status', 'pending')->count();
-
-        // Total residents
-        $totalResidents = Resident::where('is_active', true)->count();
-
-        // Unpaid bills this month
-        $unpaidBills = Bill::where('status', 'unpaid')
-            ->where('month', now()->month)
-            ->where('year', now()->year)
-            ->count();
+        // Stats with short-lived cache
+        $pendingPayments = Cache::remember('pending_payments_count', 60, fn() => Payment::where('status', 'pending')->count());
+        $totalResidents  = Cache::remember('total_residents_count', 600, fn() => Resident::where('is_active', true)->count());
+        $unpaidBills     = Cache::remember('unpaid_bills_this_month', 60, fn() => 
+            Bill::where('status', 'unpaid')->where('month', now()->month)->where('year', now()->year)->count()
+        );
 
         // Recent payments
-        $recentPayments = Payment::with(['resident.user', 'bill'])
+        $recentPayments = Payment::with(['resident', 'bill'])
             ->orderByDesc('created_at')
             ->limit(5)
             ->get();
 
         // Registration records
-        $registrations = Registration::with(['resident.user', 'creator'])
+        $registrations = Registration::with(['resident', 'creator'])
             ->whereYear('payment_date', $year)
             ->orderByDesc('payment_date')
             ->get();
@@ -82,6 +72,31 @@ class DashboardController extends Controller
         }
         rsort($availableYears);
 
+        $monthFn = DatabaseHelper::getMonthFunction('payments.payment_date');
+
+        $matrixRaw = Payment::where('payments.status', \App\Enums\PaymentStatus::Confirmed)
+            ->whereYear('payments.payment_date', $year)
+            ->join('residents', 'residents.id', '=', 'payments.resident_id')
+            ->selectRaw("residents.block_number as house, {$monthFn} as month, SUM(payments.amount_paid) as total")
+            ->groupBy('house', 'month')
+            ->orderBy('house')
+            ->get();
+
+        // Get all active units
+        $units = Resident::where('is_active', true)
+            ->orderBy('block_number')
+            ->pluck('block_number');
+
+        $blockMonthlyIncome = [];
+        foreach ($units as $house) {
+            $blockMonthlyIncome[$house] = array_fill(1, 12, 0);
+        }
+        foreach ($matrixRaw as $row) {
+            if (isset($blockMonthlyIncome[$row->house])) {
+                $blockMonthlyIncome[$row->house][(int)$row->month] = (float)$row->total;
+            }
+        }
+
         return view('admin.dashboard', compact(
             'year',
             'totalIncome',
@@ -96,6 +111,8 @@ class DashboardController extends Controller
             'registrations',
             'expenses',
             'availableYears',
+            'units',
+            'blockMonthlyIncome',
         ));
     }
 }

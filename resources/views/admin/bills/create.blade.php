@@ -31,7 +31,7 @@
                                 <option value="">-- Pilih Warga --</option>
                                 @foreach($residents as $resident)
                                     <option value="{{ $resident->id }}" {{ old('resident_id') == $resident->id ? 'selected' : '' }}>
-                                        {{ strtoupper($resident->block_number) }} - {{ $resident->user->name }}
+                                        {{ strtoupper($resident->block_number) }} - {{ $resident->name }}
                                     </option>
                                 @endforeach
                             </select>

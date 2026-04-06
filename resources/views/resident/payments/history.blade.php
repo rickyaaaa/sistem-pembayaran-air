@@ -13,7 +13,7 @@
                         <i class="bi bi-house-door me-1"></i>No. Rumah
                     </span>
                     <input type="text" name="house_number" class="form-control border-0"
-                           placeholder="Contoh: A-01"
+                           placeholder="Contoh: A3, C18, D1"
                            value="{{ $houseNumber ?? '' }}"
                            autocomplete="off" required>
                     <button type="submit" class="btn btn-warning fw-semibold px-4">
@@ -42,7 +42,7 @@
                 </div>
                 <div>
                     <div class="fw-bold">Blok {{ $resident->block }} No. {{ $resident->house_number }}</div>
-                    <div class="text-muted" style="font-size:.8rem;">{{ $resident->user->name ?? '-' }}</div>
+                    <div class="text-muted" style="font-size:.8rem;">{{ $resident->name ?? '-' }}</div>
                 </div>
             </div>
 
@@ -66,7 +66,7 @@
                                     <td class="fw-semibold py-3">{{ $payment->bill->period ?? '-' }}</td>
                                     <td class="py-3">{{ $payment->payment_date->format('d/m/Y') }}</td>
                                     <td class="text-end py-3">Rp {{ number_format($payment->amount_paid, 0, ',', '.') }}</td>
-                                    <td class="py-3">{!! $payment->status_badge !!}</td>
+                                    <td class="py-3"><x-status-badge :status="$payment->status" /></td>
                                     <td class="py-3">
                                         @if($payment->notes)
                                             <span class="text-danger" style="font-size:.8125rem;">{{ $payment->notes }}</span>

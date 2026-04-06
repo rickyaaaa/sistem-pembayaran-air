@@ -1,11 +1,13 @@
 <x-guest-layout>
     <div class="auth-card">
         <div class="auth-logo">
-            <div class="auth-logo-icon">
-                <i class="bi bi-droplet-fill"></i>
-            </div>
-            <h1>SAB Springville</h1>
-            <p>Sistem Informasi Tagihan Air</p>
+            <img src="{{ asset('images/logo.jpg') }}" alt="SAB Swadaya"
+                style="max-height: 120px; width: auto; object-fit: contain; margin-bottom: 1rem;">
+        </div>
+
+        <div class="text-center mb-4">
+            <h1 class="h4 mb-1" style="font-weight: bold;">Sistem Informasi SAB</h1>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">SAB Swadaya Perum The Spring Ville</p>
         </div>
 
         <form method="POST" action="{{ route('login') }}">

@@ -32,7 +32,7 @@
                             <input type="text"
                                    name="house_number"
                                    class="form-control border-0"
-                                   placeholder="Contoh: A-01, B-12 ..."
+                                   placeholder="Contoh: A3, C18, D1"
                                    style="font-size:.9375rem;"
                                    autocomplete="off"
                                    required>
@@ -50,6 +50,16 @@
             </div>
         </div>
     </div>
+
+    {{-- ===== YEAR FILTER ===== --}}
+    <form method="GET" class="d-flex align-items-center gap-2 mb-3">
+        <label class="form-label mb-0 text-muted" style="font-size:0.8125rem;">Tahun:</label>
+        <select name="year" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+            @foreach($availableYears as $y)
+                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+            @endforeach
+        </select>
+    </form>
 
     {{-- ===== FINANCIAL SUMMARY CARDS ===== --}}
     <h2 class="h6 fw-bold text-muted text-uppercase letter-spacing mb-3" style="letter-spacing:.08em;font-size:.72rem;">
@@ -71,7 +81,7 @@
                     <div class="fw-bold" style="font-size:1.1rem;color:#16a34a;">
                         Rp {{ number_format($totalIncome + $totalRegistrations, 0, ',', '.') }}
                     </div>
-                    <div class="text-muted" style="font-size:.75rem;">Iuran + Pendaftaran</div>
+                    <div class="text-muted" style="font-size:.75rem;">Iuran + Pemasukan Lainnya</div>
                 </div>
             </div>
         </div>
@@ -130,16 +140,68 @@
         </div>
     </div>
 
-    {{-- ===== LAST 5 EXPENSES ===== --}}
-    <div class="card border-0 shadow-sm animate-in" style="border-radius:14px;">
-        <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between py-3 px-4"
-             style="border-radius:14px 14px 0 0;border-bottom:1px solid #f1f5f9;">
-            <span class="fw-semibold" style="font-size:.9375rem;">
-                <i class="bi bi-cash-stack me-2 text-primary"></i>Pengeluaran Terakhir
-            </span>
-            <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size:.72rem;">{{ $year }}</span>
+    <div class="row g-4 mt-1 animate-in">
+        {{-- ===== LAST 5 PEMASUKAN ===== --}}
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:14px;">
+                <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between py-3 px-4"
+                     style="border-radius:14px 14px 0 0;border-bottom:1px solid #f1f5f9;">
+                    <span class="fw-semibold" style="font-size:.9375rem;">
+                        <i class="bi bi-box-arrow-in-down-right me-2 text-success"></i>Pemasukan Terbaru
+                    </span>
+                    <span class="badge bg-success bg-opacity-10 text-success" style="font-size:.72rem;">{{ $year }}</span>
+                </div>
+                <div class="card-body p-0">
+                    @forelse($recentRegistrations as $reg)
+                        <div class="d-flex align-items-center gap-3 px-4 py-3 {{ !$loop->last ? 'border-bottom' : '' }}"
+                             style="transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                 style="width:40px;height:40px;background:#dcfce7;">
+                                <i class="bi bi-wallet2 text-success"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-semibold text-truncate" style="font-size:.875rem;">
+                                    {{ $reg->resident ? strtoupper($reg->resident->block_number) . ' - ' . $reg->resident->name : ($reg->notes ?: 'Pemasukan Tanpa Warga') }}
+                                </div>
+                                <div class="text-muted" style="font-size:.75rem;">
+                                    {{ $reg->payment_date->format('d F Y') }}
+                                    @if($reg->category)
+                                        &bull; <span class="badge {{ $reg->category->badgeClass() }}" style="font-size:.68rem;">{{ $reg->category->label() }}</span>
+                                    @endif
+                                </div>
+                                @if($reg->notes)
+                                    <div class="mt-1 small text-info" style="font-size:.7rem;">
+                                        <i class="bi bi-info-circle me-1"></i>{{ $reg->notes }}
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="text-end flex-shrink-0">
+                                <div class="fw-bold text-success" style="font-size:.9rem;">
+                                    Rp {{ number_format($reg->amount, 0, ',', '.') }}
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-inbox" style="font-size:2rem;opacity:.4;"></i>
+                            <p class="mt-2 mb-0">Belum ada pemasukan terbaru</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
         </div>
-        <div class="card-body p-0">
+
+        {{-- ===== LAST 5 EXPENSES ===== --}}
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:14px;">
+                <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between py-3 px-4"
+                     style="border-radius:14px 14px 0 0;border-bottom:1px solid #f1f5f9;">
+                    <span class="fw-semibold" style="font-size:.9375rem;">
+                        <i class="bi bi-cash-stack me-2 text-primary"></i>Pengeluaran Terakhir
+                    </span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size:.72rem;">{{ $year }}</span>
+                </div>
+                <div class="card-body p-0">
             @forelse($recentExpenses as $expense)
                 <div class="d-flex align-items-center gap-3 px-4 py-3 {{ !$loop->last ? 'border-bottom' : '' }}"
                      style="transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
@@ -160,13 +222,17 @@
                         <div class="fw-bold text-danger" style="font-size:.9rem;">
                             Rp {{ number_format($expense->amount, 0, ',', '.') }}
                         </div>
-                        @if($expense->proof_file)
-                            <a href="{{ Storage::url($expense->proof_file) }}"
+                        @if($expense->proof_file && $expense->proof_file !== 'manual')
+                            <a href="{{ route('resident.expenses.proof', $expense) }}?token={{ sha1($expense->id . config('app.key')) }}"
                                target="_blank"
-                               class="text-primary text-decoration-none"
+                               class="text-success text-decoration-none"
                                style="font-size:.72rem;">
                                 <i class="bi bi-file-earmark-image me-1"></i>Lihat Bukti
                             </a>
+                        @elseif($expense->proof_file)
+                            <span class="text-success" style="font-size:.72rem;">
+                                <i class="bi bi-check-circle-fill me-1"></i>Ada Bukti
+                            </span>
                         @endif
                     </div>
                 </div>
@@ -176,6 +242,54 @@
                     <p class="mt-2 mb-0">Belum ada pengeluaran</p>
                 </div>
             @endforelse
+        </div>
+    </div>
+    </div>
+
+    {{-- ===== BLOCK MONTHLY INCOME MATRIX ===== --}}
+    <div class="card border-0 shadow-sm animate-in mt-4" style="border-radius:14px;">
+        <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between py-3 px-4"
+             style="border-radius:14px 14px 0 0;border-bottom:1px solid #f1f5f9;">
+            <span class="fw-semibold" style="font-size:.9375rem;">
+                <i class="bi bi-grid me-2 text-primary"></i>Pemasukan per No. Blok per Bulan
+            </span>
+            <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size:.72rem;">{{ $year }}</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0" style="font-size:.875rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">No. Blok</th>
+                            @foreach(['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'] as $mn)
+                                <th class="text-end">{{ $mn }}</th>
+                            @endforeach
+                            <th class="text-end pe-4">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($blockMonthlyIncome as $blok => $months)
+                            <tr>
+                                <td class="ps-4 fw-semibold">{{ $blok }}</td>
+                                @for($m = 1; $m <= 12; $m++)
+                                    <td class="text-end text-muted" style="font-size:.8rem;">
+                                        {{ $months[$m] > 0 ? number_format($months[$m]/1000,0).'k' : '-' }}
+                                    </td>
+                                @endfor
+                                <td class="text-end pe-4 fw-semibold text-primary">
+                                    Rp {{ number_format(array_sum($months),0,',','.') }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="14" class="text-center py-4 text-muted">
+                                    Belum ada pemasukan yang bisa ditampilkan
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

@@ -2,7 +2,7 @@
     <x-slot name="title">Bayar Tagihan</x-slot>
 
     <div class="mb-3">
-        <a href="{{ route('resident.bills.index', ['house_number' => $bill->resident->house_number ?? '']) }}"
+        <a href="{{ route('resident.bills.index', ['house_number' => $bill->resident->block_number ?? '']) }}"
            class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left me-1"></i>Kembali ke Tagihan
         </a>
@@ -57,20 +57,16 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="amount_paid" class="form-label fw-semibold">
-                                Jumlah yang Dibayar (Rp) <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label fw-semibold">Jumlah yang Dibayar</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
-                                <input type="number"
-                                       class="form-control @error('amount_paid') is-invalid @enderror"
-                                       id="amount_paid" name="amount_paid"
-                                       value="{{ old('amount_paid', $bill->amount) }}"
-                                       min="1" required>
-                                @error('amount_paid')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <input type="text"
+                                       class="form-control bg-light"
+                                       value="{{ number_format($bill->amount, 0, ',', '.') }}"
+                                       readonly disabled>
                             </div>
+                            <input type="hidden" name="amount_paid" value="{{ $bill->amount }}">
+                            <div class="form-text">Jumlah tagihan sudah ditetapkan oleh admin dan tidak dapat diubah.</div>
                         </div>
 
                         <div class="mb-3">
@@ -93,12 +89,27 @@
                                  class="img-fluid rounded-2 border" style="max-height:200px;">
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nama Penyetor <span class="text-danger">*</span></label>
+                            <input type="text" name="payer_name" class="form-control @error('payer_name') is-invalid @enderror"
+                                   placeholder="Masukkan nama lengkap Anda" required
+                                   value="{{ old('payer_name') }}">
+                            @error('payer_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">No. HP Penyetor <span class="text-danger">*</span></label>
+                            <input type="text" name="payer_phone" class="form-control @error('payer_phone') is-invalid @enderror"
+                                   placeholder="Contoh: 08123456789" required
+                                   value="{{ old('payer_phone') }}">
+                            @error('payer_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
                         <div class="d-flex gap-2 mt-4">
-                            <button type="submit" class="btn btn-primary"
-                                    onclick="return confirm('Kirim bukti pembayaran?')">
+                            <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-send me-1"></i>Kirim Pembayaran
                             </button>
-                            <a href="{{ route('resident.bills.index', ['house_number' => $bill->resident->house_number ?? '']) }}"
+                            <a href="{{ route('resident.bills.index', ['house_number' => $bill->resident->block_number ?? '']) }}"
                                class="btn btn-outline-secondary">Batal</a>
                         </div>
                     </form>

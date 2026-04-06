@@ -44,9 +44,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
     // Residents Management
-    Route::resource('residents', Admin\ResidentController::class)->except(['show']);
-    Route::post('residents/{resident}/reset-password', [Admin\ResidentController::class, 'resetPassword'])
-        ->name('residents.reset-password');
+    Route::resource('residents', Admin\ResidentController::class)->except(['show'])->middleware('throttle:30,1');
 
     // Bills Management
     Route::resource('bills', Admin\BillController::class)->except(['show']);
@@ -60,6 +58,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Expenses
     Route::resource('expenses', Admin\ExpenseController::class)->except(['show']);
+    Route::get('expenses/{expense}/proof', [Admin\ExpenseController::class, 'viewProof'])->name('expenses.proof');
 
     // Registrations
     Route::resource('registrations', Admin\RegistrationController::class)->only(['index', 'create', 'store', 'destroy']);
@@ -78,13 +77,24 @@ Route::prefix('warga')->name('resident.')->group(function () {
     Route::get('/dashboard', [Resident\DashboardController::class, 'index'])->name('dashboard');
 
     // Bill Search by house number
-    Route::get('/tagihan', [Resident\BillController::class, 'index'])->name('bills.index');
+    Route::get('/tagihan', [Resident\BillController::class, 'index'])
+        ->middleware('throttle:30,1')
+        ->name('bills.index');
     Route::get('/tagihan/{bill}', [Resident\BillController::class, 'show'])->name('bills.show');
 
     // Payment
     Route::get('/bayar/{bill}', [Resident\PaymentController::class, 'create'])->name('payments.create');
-    Route::post('/bayar/{bill}', [Resident\PaymentController::class, 'store'])->name('payments.store');
-    Route::get('/riwayat-bayar', [Resident\PaymentController::class, 'history'])->name('payments.history');
+    Route::post('/bayar/{bill}', [Resident\PaymentController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('payments.store');
+    Route::get('/riwayat-bayar', [Resident\PaymentController::class, 'history'])
+        ->middleware('throttle:30,1')
+        ->name('payments.history');
+
+    // Public route to view expense proof (read-only, no auth)
+    Route::get('/pengeluaran/{expense}/bukti', [Resident\ExpenseProofController::class, 'show'])
+        ->middleware('throttle:30,1')
+        ->name('expenses.proof');
 });
 
 require __DIR__.'/auth.php';

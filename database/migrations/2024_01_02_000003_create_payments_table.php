@@ -15,6 +15,8 @@ return new class extends Migration
             $table->date('payment_date');
             $table->decimal('amount_paid', 12, 2);
             $table->string('proof_file');
+            $table->string('payer_name')->nullable();
+            $table->string('payer_phone')->nullable();
             $table->enum('status', ['pending', 'confirmed', 'rejected'])->default('pending');
             $table->foreignId('confirmed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('confirmed_at')->nullable();

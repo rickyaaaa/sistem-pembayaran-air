@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\BillStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Bill;
 use App\Models\Resident;
+use App\Http\Requests\Admin\BillRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Helpers\DatabaseHelper;
 
 class BillController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Bill::with('resident.user');
+        $query = Bill::with('resident');
 
         if ($month = $request->input('month')) {
             $query->where('month', $month);
@@ -25,18 +29,27 @@ class BillController extends Controller
             $query->where('status', $status);
         }
 
+        if ($block = $request->input('block')) {
+            $query->whereHas('resident', fn($q) => $q->where('block', strtoupper($block)));
+        }
+
         if ($search = $request->input('search')) {
             $query->whereHas('resident', function ($q) use ($search) {
                 $q->where('block_number', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+                  ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
-        $bills = $query->orderByDesc('year')->orderByDesc('month')->paginate(20);
+        $bills = $query
+            ->join('residents', 'residents.id', '=', 'bills.resident_id')
+            ->select('bills.*')
+            ->orderBy('residents.block_number')
+            ->orderByDesc('bills.year')
+            ->orderByDesc('bills.month')
+            ->paginate(20);
 
-        $availableYears = Bill::selectRaw('DISTINCT year')
+        $yearFn = DatabaseHelper::getYearFunction('year');
+        $availableYears = Bill::selectRaw("DISTINCT {$yearFn} as year")
             ->orderByDesc('year')
             ->pluck('year')
             ->toArray();
@@ -45,50 +58,45 @@ class BillController extends Controller
             rsort($availableYears);
         }
 
-        return view('admin.bills.index', compact('bills', 'availableYears'));
+        $availableBlocks = \App\Models\Resident::where('is_active', true)
+            ->selectRaw('DISTINCT block')
+            ->orderBy('block')
+            ->pluck('block');
+
+        return view('admin.bills.index', compact('bills', 'availableYears', 'availableBlocks'));
     }
 
     public function create()
     {
-        $residents = Resident::with('user')->where('is_active', true)->orderBy('block')->orderBy('house_number')->get();
+        $residents = Resident::where('is_active', true)->orderBy('block')->orderBy('house_number')->get();
         return view('admin.bills.create', compact('residents'));
     }
 
-    public function store(Request $request)
+    public function store(BillRequest $request)
     {
-        $validated = $request->validate([
-            'month' => 'required|integer|between:1,12',
-            'year' => 'required|integer|min:2020|max:2099',
-            'amount' => 'required|numeric|min:0',
-            'type' => 'required|in:bulk,single',
-            'resident_id' => 'required_if:type,single|nullable|exists:residents,id',
-        ]);
+        $validated = $request->validated();
 
         $created = 0;
         $skipped = 0;
 
         if ($validated['type'] === 'bulk') {
-            $activeResidents = Resident::where('is_active', true)->get();
+            // Fix 12: Single insertOrIgnore instead of N+1 loop
+            $activeResidents = Resident::where('is_active', true)->pluck('id');
 
-            foreach ($activeResidents as $resident) {
-                $exists = Bill::where('resident_id', $resident->id)
-                    ->where('month', $validated['month'])
-                    ->where('year', $validated['year'])
-                    ->exists();
+            $records = $activeResidents->map(fn($id) => [
+                'resident_id' => $id,
+                'month'       => $validated['month'],
+                'year'        => $validated['year'],
+                'amount'      => $validated['amount'],
+                'status'      => BillStatus::Unpaid,
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ])->toArray();
 
-                if (!$exists) {
-                    Bill::create([
-                        'resident_id' => $resident->id,
-                        'month' => $validated['month'],
-                        'year' => $validated['year'],
-                        'amount' => $validated['amount'],
-                        'status' => 'unpaid',
-                    ]);
-                    $created++;
-                } else {
-                    $skipped++;
-                }
-            }
+            // insertOrIgnore: skip if already exists (unique constraint resident_id+month+year)
+            $created = Bill::insertOrIgnore($records);
+            $skipped = count($records) - $created;
+
         } else {
             $exists = Bill::where('resident_id', $validated['resident_id'])
                 ->where('month', $validated['month'])
@@ -101,7 +109,7 @@ class BillController extends Controller
                     'month' => $validated['month'],
                     'year' => $validated['year'],
                     'amount' => $validated['amount'],
-                    'status' => 'unpaid',
+                    'status' => BillStatus::Unpaid,
                 ]);
                 $created++;
             } else {
@@ -119,21 +127,51 @@ class BillController extends Controller
 
     public function edit(Bill $bill)
     {
-        $bill->load('resident.user');
+        $bill->load('resident');
         return view('admin.bills.edit', compact('bill'));
     }
 
-    public function update(Request $request, Bill $bill)
+    public function update(BillRequest $request, Bill $bill)
     {
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:0',
-        ]);
+        $validated = $request->validated();
 
-        if ($bill->status === 'paid') {
-            return back()->withErrors(['amount' => 'Tagihan yang telah lunas tidak bisa diubah.']);
+        // Nominal 0 → auto lunas
+        if ((float) $validated['amount'] === 0.0) {
+            $validated['status'] = BillStatus::Paid->value;
         }
 
-        $bill->update(['amount' => $validated['amount']]);
+        DB::transaction(function () use ($validated, $bill) {
+            // Override ke paid → buat payment record manual jika belum paid
+            if ($validated['status'] === 'paid' && $bill->status !== BillStatus::Paid) {
+                if ((float) $validated['amount'] > 0) {
+                    \App\Models\Payment::create([
+                        'bill_id'      => $bill->id,
+                        'resident_id'  => $bill->resident_id,
+                        'payment_date' => now()->toDateString(),
+                        'amount_paid'  => $validated['amount'],
+                        'proof_file'   => \App\Models\Payment::MANUAL_PROOF,
+                        'payer_name'   => 'Admin (' . auth()->user()->name . ')',
+                        'payer_phone'  => '-',
+                        'status'       => \App\Enums\PaymentStatus::Confirmed,
+                        'confirmed_by' => auth()->id(),
+                        'confirmed_at' => now(),
+                        'notes'        => 'Dicatat manual oleh admin',
+                    ]);
+                }
+            }
+
+            // Override ke unpaid → hapus payment yang masih pending/confirmed
+            if ($validated['status'] === 'unpaid' && $bill->status === BillStatus::Paid) {
+                $bill->payments()
+                    ->whereIn('status', [\App\Enums\PaymentStatus::Pending, \App\Enums\PaymentStatus::Confirmed])
+                    ->delete();
+            }
+
+            $bill->update([
+                'amount' => $validated['amount'],
+                'status' => BillStatus::from($validated['status']),
+            ]);
+        });
 
         return redirect()->route('admin.bills.index')
             ->with('success', 'Tagihan berhasil diperbarui.');
@@ -141,7 +179,7 @@ class BillController extends Controller
 
     public function destroy(Bill $bill)
     {
-        if ($bill->status === 'paid') {
+        if ($bill->status === BillStatus::Paid) {
             return back()->withErrors(['error' => 'Tagihan yang telah lunas tidak bisa dihapus.']);
         }
 

@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
- * @property int $user_id
+ * @property string $name
  * @property string $block_number
  * @property string $block
  * @property string $house_number
@@ -15,17 +16,17 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User $user
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Bill> $bills
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment> $payments
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Registration> $registrations
  */
 class Resident extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id',
+        'name',
         'block_number',
         'block',
         'house_number',
@@ -38,11 +39,6 @@ class Resident extends Model
         return [
             'is_active' => 'boolean',
         ];
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
     }
 
     public function bills()

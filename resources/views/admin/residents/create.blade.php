@@ -54,10 +54,8 @@
                             @enderror
                         </div>
 
-                        <div class="alert alert-info py-2" style="font-size:0.8125rem;">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Username dan password default akan otomatis dibuat dari nomor blok (contoh: <strong>a1</strong>).
-                        </div>
+
+
 
                         <div class="d-flex gap-2 mt-4">
                             <button type="submit" class="btn btn-primary">

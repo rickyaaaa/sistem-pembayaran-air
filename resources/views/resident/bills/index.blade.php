@@ -13,7 +13,7 @@
                         <i class="bi bi-house-door me-1"></i>No. Rumah
                     </span>
                     <input type="text" name="house_number" class="form-control border-0"
-                           placeholder="Contoh: A-01"
+                           placeholder="Contoh: A3, C18, D1"
                            value="{{ $houseNumber ?? '' }}"
                            autocomplete="off" required>
                     <button type="submit" class="btn btn-warning fw-semibold px-4">
@@ -53,7 +53,7 @@
                         @endif
                     </div>
                     <div class="text-muted" style="font-size:.8rem;">
-                        <i class="bi bi-person me-1"></i>{{ $resident->user->name ?? '-' }}
+                        <i class="bi bi-person me-1"></i>{{ $resident->name ?? '-' }}
                         @if($resident->phone_number)
                             &bull; <i class="bi bi-telephone me-1"></i>{{ $resident->phone_number }}
                         @endif
@@ -96,15 +96,15 @@
                                 <tr>
                                     <td class="fw-semibold px-4 py-3">{{ $bill->period }}</td>
                                     <td class="text-end py-3">Rp {{ number_format($bill->amount, 0, ',', '.') }}</td>
-                                    <td class="py-3">{!! $bill->status_badge !!}</td>
+                                    <td class="py-3"><x-status-badge :status="$bill->status" /></td>
                                     <td class="py-3">
-                                        @if($bill->status === 'unpaid')
-                                            <a href="{{ route('resident.payments.create', $bill) }}"
+                                        @if($bill->status->value === 'unpaid')
+                                            <a href="{{ route('resident.payments.create', $bill) }}?house_number={{ urlencode($houseNumber ?? '') }}"
                                                class="btn btn-sm btn-primary">
                                                 <i class="bi bi-credit-card me-1"></i>Bayar
                                             </a>
                                         @else
-                                            <a href="{{ route('resident.bills.show', $bill) }}"
+                                            <a href="{{ route('resident.bills.show', $bill) }}?house_number={{ urlencode($houseNumber ?? '') }}"
                                                class="btn btn-sm btn-outline-secondary">
                                                 <i class="bi bi-eye me-1"></i>Detail
                                             </a>
@@ -135,7 +135,7 @@
             <div class="card-body">
                 <i class="bi bi-search" style="font-size:3rem;color:#94a3b8;"></i>
                 <h2 class="h5 mt-3 fw-semibold text-muted">Masukkan nomor rumah untuk mulai pencarian</h2>
-                <p class="text-muted" style="font-size:.875rem;">Contoh: A-01, B-12, C-5</p>
+                <p class="text-muted" style="font-size:.875rem;">Contoh: A3, C18, D1</p>
             </div>
         </div>
     @endif

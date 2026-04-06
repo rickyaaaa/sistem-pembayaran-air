@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BillStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,12 +12,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $month
  * @property int $year
  * @property string $amount
- * @property string $status
+ * @property BillStatus $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $month_name
  * @property-read string $period
- * @property-read string $status_badge
  * @property-read \App\Models\Resident $resident
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment> $payments
  */
@@ -36,14 +36,15 @@ class Bill extends Model
     {
         return [
             'amount' => 'decimal:2',
-            'month' => 'integer',
-            'year' => 'integer',
+            'month'  => 'integer',
+            'year'   => 'integer',
+            'status' => BillStatus::class,
         ];
     }
 
     public function resident()
     {
-        return $this->belongsTo(Resident::class);
+        return $this->belongsTo(Resident::class)->withTrashed();
     }
 
     public function payments()
@@ -73,13 +74,5 @@ class Bill extends Model
         return $this->month_name . ' ' . $this->year;
     }
 
-    public function getStatusBadgeAttribute(): string
-    {
-        return match ($this->status) {
-            'paid' => '<span class="badge bg-success">Lunas</span>',
-            'pending' => '<span class="badge bg-warning text-dark">Menunggu</span>',
-            'unpaid' => '<span class="badge bg-danger">Belum Bayar</span>',
-            default => '<span class="badge bg-secondary">-</span>',
-        };
-    }
+
 }

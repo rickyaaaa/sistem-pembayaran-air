@@ -15,7 +15,7 @@
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">Nama Warga</div>
-                        <div class="detail-value">{{ $payment->resident->user->name }}</div>
+                        <div class="detail-value">{{ $payment->resident->name }}</div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">Periode</div>
@@ -35,7 +35,7 @@
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">Status</div>
-                        <div class="detail-value">{!! $payment->status_badge !!}</div>
+                        <div class="detail-value"><x-status-badge :status="$payment->status" /></div>
                     </div>
                     @if($payment->notes)
                         <div class="detail-row">
@@ -53,15 +53,27 @@
                         <div class="detail-label">Tgl. Submit</div>
                         <div class="detail-value">{{ $payment->created_at->format('d F Y, H:i') }}</div>
                     </div>
+                    @if($payment->payer_name)
+                        <div class="detail-row">
+                            <div class="detail-label">Nama Penyetor</div>
+                            <div class="detail-value fw-semibold">{{ $payment->payer_name }}</div>
+                        </div>
+                    @endif
+                    @if($payment->payer_phone)
+                        <div class="detail-row">
+                            <div class="detail-label">No. HP Penyetor</div>
+                            <div class="detail-value">{{ $payment->payer_phone }}</div>
+                        </div>
+                    @endif
                 </div>
             </div>
 
             <!-- Action Buttons -->
-            @if($payment->status === 'pending')
+            @if($payment->status->value === 'pending')
                 <div class="card mt-3">
                     <div class="card-body">
                         <div class="d-flex gap-2 mb-3">
-                            <form method="POST" action="{{ route('admin.payments.confirm', $payment) }}" onsubmit="return confirm('Konfirmasi pembayaran ini?')">
+                            <form method="POST" action="{{ route('admin.payments.confirm', $payment) }}" id="confirmPaymentForm">
                                 @csrf
                                 <button type="submit" class="btn btn-success">
                                     <i class="bi bi-check-lg me-1"></i> Konfirmasi
@@ -74,7 +86,7 @@
                         </div>
 
                         <div class="collapse" id="rejectForm">
-                            <form method="POST" action="{{ route('admin.payments.reject', $payment) }}">
+                            <form method="POST" action="{{ route('admin.payments.reject', $payment) }}" id="rejectPaymentForm">
                                 @csrf
                                 <div class="mb-3">
                                     <label for="notes" class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
@@ -84,7 +96,7 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Yakin tolak pembayaran ini?')">
+                                <button type="submit" class="btn btn-danger btn-sm">
                                     <i class="bi bi-x-lg me-1"></i> Konfirmasi Tolak
                                 </button>
                             </form>
@@ -106,7 +118,7 @@
                             $ext = strtolower(pathinfo($payment->proof_file, PATHINFO_EXTENSION));
                         @endphp
                         @if(in_array($ext, ['jpg', 'jpeg', 'png']))
-                            <img src="{{ asset('storage/' . $payment->proof_file) }}" alt="Bukti Pembayaran" class="proof-preview">
+                            <img src="{{ route('admin.payments.proof', $payment) }}" alt="Bukti Pembayaran" class="proof-preview">
                         @elseif($ext === 'pdf')
                             <div class="mb-3">
                                 <i class="bi bi-file-earmark-pdf text-danger" style="font-size:3rem;"></i>

@@ -24,8 +24,8 @@
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="stat-card stat-info">
-                <div class="stat-icon"><i class="bi bi-person-plus"></i></div>
-                <div class="stat-label">Iuran Pendaftaran</div>
+                <div class="stat-icon"><i class="bi bi-cash-coin"></i></div>
+                <div class="stat-label">Pemasukan Lainnya</div>
                 <div class="stat-value stat-value-sm">Rp {{ number_format($totalRegistrations, 0, ',', '.') }}</div>
             </div>
         </div>
@@ -103,7 +103,7 @@
                             <tr>
                                 <th>Bulan</th>
                                 <th class="text-end">Pemasukan</th>
-                                <th class="text-end">Pendaftaran</th>
+                                <th class="text-end">Pemasukan Lainnya</th>
                                 <th class="text-end">Pengeluaran</th>
                                 <th class="text-end">Saldo</th>
                             </tr>
