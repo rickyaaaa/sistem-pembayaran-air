@@ -47,7 +47,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('residents', Admin\ResidentController::class)->except(['show'])->middleware('throttle:30,1');
 
     // Pengurus (Staff Level 2) Management - Only Super Admin
-    Route::resource('pengurus', Admin\PengurusController::class)->except(['show'])->middleware('super_admin');
+    Route::resource('pengurus', Admin\PengurusController::class)->except(['show'])->parameters(['pengurus' => 'staff'])->middleware('super_admin');
 
     // Bills Management
     Route::resource('bills', Admin\BillController::class)->except(['show']);
