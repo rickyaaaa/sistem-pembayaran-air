@@ -4,8 +4,16 @@
     {{-- ===== Search Bar ===== --}}
     <div class="card border-0 shadow-sm mb-4 animate-in" style="border-radius:14px;overflow:hidden;">
         <div class="card-body p-4" style="background:linear-gradient(135deg,#1d4ed8,#0891b2);color:#fff;">
-            <h1 class="h5 fw-bold mb-1"><i class="bi bi-receipt me-2"></i>Cek Tagihan Air</h1>
-            <p class="opacity-75 mb-3" style="font-size:.875rem;">Masukkan nomor rumah Anda untuk melihat tagihan</p>
+            <div class="d-flex align-items-start justify-content-between mb-3">
+                <div>
+                    <h1 class="h5 fw-bold mb-1"><i class="bi bi-receipt me-2"></i>Cek Tagihan Air</h1>
+                    <p class="opacity-75 mb-0" style="font-size:.875rem;">Masukkan nomor rumah Anda untuk melihat tagihan</p>
+                </div>
+                <a href="{{ route('resident.dashboard') }}" class="btn btn-sm btn-outline-light text-white d-flex align-items-center gap-1 flex-shrink-0">
+                    <i class="bi bi-arrow-left"></i>
+                    <span class="d-none d-sm-inline">Beranda</span>
+                </a>
+            </div>
 
             <form method="GET" action="{{ route('resident.bills.index') }}" class="d-flex gap-2 flex-wrap">
                 <div class="input-group" style="max-width:440px;">
