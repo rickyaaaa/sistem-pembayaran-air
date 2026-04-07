@@ -141,9 +141,23 @@
         </div>
     </div>
 
-    <div class="mt-3">
+    <div class="mt-4 d-flex gap-2">
+        <a href="{{ route('admin.payments.edit', $payment) }}" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i> Edit
+        </a>
+
+        <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST"
+              onsubmit="return confirm('Apakah Anda yakin ingin menghapus pembayaran ini? Jika sudah dikonfirmasi, status tagihan akan kembali menjadi Belum Bayar.')"
+              class="d-inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-outline-danger">
+                <i class="bi bi-trash me-1"></i> Hapus
+            </button>
+        </form>
+
         <a href="{{ route('admin.payments.index') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Kembali
+            <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
         </a>
     </div>
 </x-app-layout>

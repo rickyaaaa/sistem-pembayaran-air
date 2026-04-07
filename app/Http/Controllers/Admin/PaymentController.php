@@ -86,6 +86,43 @@ class PaymentController extends Controller
             ->with('success', 'Pembayaran berhasil ditolak.');
     }
 
+    public function edit(Payment $payment)
+    {
+        return view('admin.payments.edit', compact('payment'));
+    }
+
+    public function update(Request $request, Payment $payment)
+    {
+        $validated = $request->validate([
+            'payment_date' => 'required|date',
+            'amount_paid'  => 'required|numeric|min:0',
+            'payer_name'   => 'nullable|string|max:255',
+            'payer_phone'  => 'nullable|string|max:20',
+            'notes'        => 'nullable|string|max:500',
+        ]);
+
+        DB::transaction(function () use ($payment, $validated) {
+            $payment->update($validated);
+        });
+
+        return redirect()->route('admin.payments.show', $payment)
+            ->with('success', 'Data pembayaran berhasil diperbarui.');
+    }
+
+    public function destroy(Payment $payment)
+    {
+        DB::transaction(function () use ($payment) {
+            // Jika pembayaran yang sudah 'Confirmed' dihapus, kembalikan status bill ke Unpaid
+            if ($payment->status === PaymentStatus::Confirmed) {
+                $payment->bill->update(['status' => BillStatus::Unpaid]);
+            }
+            $payment->delete();
+        });
+
+        return redirect()->route('admin.payments.index')
+            ->with('success', 'Pembayaran berhasil dihapus.');
+    }
+
     // Fix 2: Serve proof files from private disk
     public function viewProof(Payment $payment)
     {

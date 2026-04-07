@@ -47,9 +47,22 @@
                             <td class="text-end">Rp {{ number_format($payment->amount_paid, 0, ',', '.') }}</td>
                             <td><x-status-badge :status="$payment->status" /></td>
                             <td>
-                                <a href="{{ route('admin.payments.show', $payment) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i> Detail
-                                </a>
+                                <div class="d-flex gap-1">
+                                    <a href="{{ route('admin.payments.show', $payment) }}" class="btn btn-sm btn-outline-primary" title="Detail">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('admin.payments.edit', $payment) }}" class="btn btn-sm btn-outline-info" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST"
+                                          onsubmit="return confirm('Hapus pembayaran ini?')" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
