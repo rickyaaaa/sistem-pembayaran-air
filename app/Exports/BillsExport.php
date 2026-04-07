@@ -20,7 +20,7 @@ class BillsExport implements FromQuery, WithHeadings, WithMapping, WithTitle, Sh
     {
         return Bill::where('bills.year', $this->year)
             ->join('residents', 'residents.id', '=', 'bills.resident_id')
-            ->select('bills.*')
+            ->select('bills.*', 'residents.block_number as res_block_number', 'residents.name as res_name')
             ->orderBy('residents.block_number')
             ->orderBy('bills.month');
     }
@@ -45,8 +45,8 @@ class BillsExport implements FromQuery, WithHeadings, WithMapping, WithTitle, Sh
         ];
 
         return [
-            strtoupper($bill->resident->block_number ?? '-'),
-            $bill->resident->name ?? '-',
+        strtoupper($bill->res_block_number ?? '-'),
+        $bill->res_name ?? '-',
             $months[$bill->month] ?? $bill->month,
             $bill->year,
             (float) $bill->amount,

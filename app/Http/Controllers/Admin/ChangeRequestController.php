@@ -31,6 +31,10 @@ class ChangeRequestController extends Controller
             abort(403);
         }
 
+        if (!$changeRequest->isPending()) {
+            return back()->withErrors(['error' => 'Permintaan ini sudah diproses.']);
+        }
+
         $allowed = [
             \App\Models\Bill::class,
             \App\Models\Expense::class,
@@ -46,16 +50,7 @@ class ChangeRequestController extends Controller
             if ($model) {
                 // If the model is a Bill, we need to run business logic (payment record etc)
                 if ($model instanceof \App\Models\Bill) {
-                    $billController = app(\App\Http\Controllers\Admin\BillController::class);
-                    
-                    // Create a mock request to reuse update logic
-                    $request = new \App\Http\Requests\Admin\BillRequest();
-                    $request->replace($changeRequest->requested_data);
-                    $request->merge(['reason' => $changeRequest->reason]);
-                    $request->setUserResolver(fn() => $changeRequest->requester); // Logic uses auth()->user()
-
-                    // We need to bypass the isPengurus() check in BillController::update
-                    // A better way is to refactor the logic, but for now we follow Fix 5
+                    // Logic uses auth()->user() (ChangeRequest requester)
                     $model->update($changeRequest->requested_data);
                     
                     // Trigger business logic for payment record

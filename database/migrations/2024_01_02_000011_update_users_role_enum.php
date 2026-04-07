@@ -17,7 +17,7 @@ return new class extends Migration
         // the safest way for SQLite is to change the column to string.
         
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('pengurus')->change();
+            $table->string('role')->default('admin')->change();
         });
     }
 
