@@ -31,19 +31,16 @@ class ChangeRequestController extends Controller
             abort(403);
         }
 
-        if (!$changeRequest->isPending()) {
-            return back()->withErrors(['error' => 'Permintaan ini sudah diproses.']);
+        $allowed = [
+            \App\Models\Bill::class,
+            \App\Models\Expense::class,
+        ];
+        if (!in_array($changeRequest->model_type, $allowed)) {
+            abort(422, 'Tipe model tidak diizinkan.');
         }
 
         DB::transaction(function () use ($changeRequest) {
             // Apply the requested changes to the actual model
-            $allowed = [
-                \App\Models\Bill::class,
-                \App\Models\Expense::class,
-            ];
-            if (!in_array($changeRequest->model_type, $allowed)) {
-                abort(422, 'Tipe model tidak diizinkan.');
-            }
             $model = app($changeRequest->model_type)::find($changeRequest->model_id);
 
             if ($model) {

@@ -18,8 +18,7 @@ class BillsExport implements FromQuery, WithHeadings, WithMapping, WithTitle, Sh
 
     public function query()
     {
-        return Bill::with('resident')
-            ->where('year', $this->year)
+        return Bill::where('bills.year', $this->year)
             ->join('residents', 'residents.id', '=', 'bills.resident_id')
             ->select('bills.*')
             ->orderBy('residents.block_number')

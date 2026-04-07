@@ -50,6 +50,9 @@ class ResidentController extends Controller
 
     public function store(ResidentRequest $request)
     {
+        if (auth()->user()->isPengurus()) {
+            return back()->withErrors(['error' => 'Pengurus tidak bisa menambah warga. Hubungi Admin.']);
+        }
         $validated = $request->validated();
 
         $blockNumber = strtolower($validated['block'] . $validated['house_number']);
@@ -94,6 +97,9 @@ class ResidentController extends Controller
     // Fix 8: Soft delete — checks for unpaid bills first
     public function destroy(Resident $resident)
     {
+        if (auth()->user()->isPengurus()) {
+            return back()->withErrors(['error' => 'Pengurus tidak bisa menghapus warga. Hubungi Admin.']);
+        }
         $unpaidCount = $resident->bills()
             ->whereIn('status', [\App\Enums\BillStatus::Unpaid, \App\Enums\BillStatus::Pending])
             ->count();

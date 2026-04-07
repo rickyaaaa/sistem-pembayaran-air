@@ -14,22 +14,13 @@ class FinancialReportService
     public function getSummary(int $year): array
     {
         $totalIncome = Payment::where('status', PaymentStatus::Confirmed)
-            ->where(function($q) use ($year) {
-                $func = \App\Helpers\DatabaseHelper::getYearFunction('payment_date');
-                $q->whereRaw("{$func} = ?", [$year]);
-            })
+            ->whereYear('payment_date', $year)
             ->sum('amount_paid');
 
-        $totalRegistrations = Registration::where(function($q) use ($year) {
-                $func = \App\Helpers\DatabaseHelper::getYearFunction('payment_date');
-                $q->whereRaw("{$func} = ?", [$year]);
-            })
+        $totalRegistrations = Registration::whereYear('payment_date', $year)
             ->sum('amount');
 
-        $totalExpenses = Expense::where(function($q) use ($year) {
-                $func = \App\Helpers\DatabaseHelper::getYearFunction('date');
-                $q->whereRaw("{$func} = ?", [$year]);
-            })
+        $totalExpenses = Expense::whereYear('date', $year)
             ->sum('amount');
 
         return [

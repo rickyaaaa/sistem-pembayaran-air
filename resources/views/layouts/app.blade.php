@@ -75,6 +75,12 @@
                             @endif
                         </a>
                     </li>
+                    <li class="sidebar-nav-item">
+                        <a href="{{ route('admin.pengurus.index') }}" class="sidebar-nav-link {{ request()->routeIs('admin.pengurus.*') ? 'active' : '' }}">
+                            <i class="bi bi-person-gear"></i>
+                            <span>Kelola Pengurus</span>
+                        </a>
+                    </li>
                 @endif
                 <li class="sidebar-nav-item">
                     <a href="{{ route('admin.residents.index') }}" class="sidebar-nav-link {{ request()->routeIs('admin.residents.*') ? 'active' : '' }}">
