@@ -2,54 +2,74 @@
     <x-slot name="title">Beranda Warga</x-slot>
 
     {{-- ===== HERO / SEARCH SECTION ===== --}}
-    <div class="card border-0 mb-4 overflow-hidden animate-in"
-         style="background: linear-gradient(135deg, #1d4ed8 0%, #0891b2 100%); color: #fff; border-radius: 16px;">
-        <div class="card-body p-4 p-md-5">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-7">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center"
-                             style="width:54px;height:54px;background:rgba(255,255,255,.18);">
-                            <i class="bi bi-droplet-fill" style="font-size:1.6rem;"></i>
-                        </div>
-                        <div>
-                            <h1 class="h4 fw-bold mb-0">Portal Informasi SAB Swadaya</h1>
-                            <p class="mb-0 opacity-75" style="font-size:.875rem;">
-                                Perum The Spring Ville — Tahun {{ $year }}
-                            </p>
-                        </div>
-                    </div>
-                    <p class="opacity-85 mb-4" style="font-size:.9375rem;max-width:480px;">
-                        Cek tagihan air, riwayat pembayaran, dan laporan keuangan SAB secara transparan tanpa perlu login.
-                    </p>
+<div class="card border-0 mb-4 overflow-hidden animate-in"
+     style="background: linear-gradient(135deg, #1d4ed8 0%, #0891b2 100%); color: #fff; border-radius: 16px;">
+    <div class="card-body p-3 p-md-5">
+        <div class="row align-items-center g-3">
+            <div class="col-12 col-lg-7">
 
-                    {{-- House Number Search --}}
-                    <form action="{{ route('resident.bills.index') }}" method="GET" class="d-flex gap-2 flex-wrap">
-                        <div class="input-group" style="max-width:380px;">
-                            <span class="input-group-text bg-white text-primary border-0 fw-semibold">
-                                <i class="bi bi-house-door me-1"></i> No. Rumah
+                {{-- Logo + Judul (mobile: row, desktop: row juga) --}}
+                <div class="d-flex align-items-center gap-3 mSb-3">
+                    {{-- Logo hanya tampil di mobile di sini --}}
+                    <div class="d-flex d-lg-none flex-shrink-0">
+                        <img src="{{ asset('images/logo.jpg') }}" alt="SAB Swadaya"
+                             style="height:52px;width:52px;object-fit:cover;border-radius:10px;
+                                    background:rgba(255,255,255,.15);padding:4px;opacity:.92;">
+                    </div>
+                    {{-- Icon droplet hanya desktop --}}
+                    <div class="rounded-circle d-none d-lg-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width:54px;height:54px;background:rgba(255,255,255,.18);">
+                        <i class="bi bi-droplet-fill" style="font-size:1.6rem;"></i>
+                    </div>
+                    <div>
+                        <h1 class="fw-bold mb-0" style="font-size:clamp(1rem, 4vw, 1.35rem); line-height:1.3;">
+                            Portal Informasi SAB Swadaya
+                        </h1>
+                        <p class="mb-0 opacity-75" style="font-size:.8rem;">
+                            Perum The Spring Ville — Tahun {{ $year }}
+                        </p>
+                    </div>
+                </div>
+
+                <p class="opacity-85 mb-3" style="font-size:.875rem;max-width:480px;">
+                    Cek tagihan air, riwayat pembayaran, dan laporan keuangan SAB secara transparan tanpa perlu login.
+                </p>
+
+                {{-- House Number Search --}}
+                <form action="{{ route('resident.bills.index') }}" method="GET">
+                    <div class="d-flex gap-2">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white text-primary border-0 fw-semibold px-2 px-md-3"
+                                  style="font-size:.85rem;">
+                                <i class="bi bi-house-door me-1"></i>
+                                <span class="d-none d-sm-inline">No. Rumah</span>
                             </span>
                             <input type="text"
                                    name="house_number"
                                    class="form-control border-0"
                                    placeholder="Contoh: A3, C18, D1"
-                                   style="font-size:.9375rem;"
+                                   style="font-size:.9rem;"
                                    autocomplete="off"
                                    required>
-                            <button type="submit" class="btn btn-warning fw-semibold px-4">
-                                <i class="bi bi-search me-1"></i> Cek Tagihan
+                            <button type="submit" class="btn btn-warning fw-semibold px-3">
+                                <i class="bi bi-search"></i>
+                                <span class="d-none d-sm-inline ms-1">Cek Tagihan</span>
                             </button>
                         </div>
-                    </form>
-                </div>
-                <div class="col-lg-5 d-none d-lg-flex justify-content-end">
-                    <img src="{{ asset('images/logo.jpg') }}" alt="SAB Swadaya"
-                         style="height:160px;width:auto;object-fit:contain;border-radius:12px;
-                                background:rgba(255,255,255,.15);padding:8px;opacity:.92;">
-                </div>
+                    </div>
+                </form>
+
+            </div>
+
+            {{-- Logo desktop (tetap di kanan) --}}
+            <div class="col-lg-5 d-none d-lg-flex justify-content-end">
+                <img src="{{ asset('images/logo.jpg') }}" alt="SAB Swadaya"
+                     style="height:160px;width:auto;object-fit:contain;border-radius:12px;
+                            background:rgba(255,255,255,.15);padding:8px;opacity:.92;">
             </div>
         </div>
     </div>
+</div>
 
     {{-- ===== YEAR FILTER ===== --}}
     <form method="GET" class="d-flex align-items-center gap-2 mb-3">
