@@ -90,6 +90,19 @@ class DashboardController extends Controller
             }
         }
 
+        $perPage = 20;
+        $page = (int) $request->input('page', 1);
+        $offset = ($page - 1) * $perPage;
+
+        $items = array_slice($blockMonthlyIncome, $offset, $perPage, true);
+        $blockMonthlyIncome = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            count($blockMonthlyIncome),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query(), 'fragment' => 'matrix-section']
+        );
+
         if ($request->ajax() && $request->input('partial') === 'matrix') {
             return view('admin.partials.dashboard_matrix_table', compact('blockMonthlyIncome', 'year'));
         }

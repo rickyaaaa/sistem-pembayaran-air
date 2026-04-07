@@ -24,3 +24,9 @@
         @endforeach
     </tbody>
 </table>
+
+@if(method_exists($blockMonthlyIncome, 'links'))
+    <div class="mt-3 px-3">
+        {{ $blockMonthlyIncome->links() }}
+    </div>
+@endif
