@@ -99,7 +99,15 @@ class PaymentController extends Controller
             'payer_name'   => 'nullable|string|max:255',
             'payer_phone'  => 'nullable|string|max:20',
             'notes'        => 'nullable|string|max:500',
+            'proof_file'   => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
+
+        if ($request->hasFile('proof_file')) {
+            if ($payment->proof_file && $payment->proof_file !== 'manual') {
+                Storage::disk('private')->delete($payment->proof_file);
+            }
+            $validated['proof_file'] = $request->file('proof_file')->store('payment_proofs', 'private');
+        }
 
         DB::transaction(function () use ($payment, $validated) {
             $payment->update($validated);
@@ -112,10 +120,13 @@ class PaymentController extends Controller
     public function destroy(Payment $payment)
     {
         DB::transaction(function () use ($payment) {
-            // Jika pembayaran yang sudah 'Confirmed' dihapus, kembalikan status bill ke Unpaid
-            if ($payment->status === PaymentStatus::Confirmed) {
-                $payment->bill->update(['status' => BillStatus::Unpaid]);
+            // Kembalikan status tagihan ke Unpaid sebelum pembayaran dihapus
+            $payment->bill->update(['status' => BillStatus::Unpaid]);
+
+            if ($payment->proof_file && $payment->proof_file !== 'manual') {
+                Storage::disk('private')->delete($payment->proof_file);
             }
+
             $payment->delete();
         });
 

@@ -268,7 +268,7 @@
                 <span class="auth-divider-text">ATAU</span>
             </div>
 
-            <a href="{{ route('resident.dashboard') }}" class="btn btn-guest w-100 py-2 d-flex justify-content-center align-items-center gap-2" style="font-size: 0.85rem;">
+            <a href="{{ route('resident.dashboard') }}" class="btn btn-success w-100 py-2 d-flex justify-content-center align-items-center gap-2" style="font-size: 0.85rem; border-radius: 8px; font-weight: 600;">
                 <i class="bi bi-house-door"></i> Masuk sebagai Warga
             </a>
         </div>

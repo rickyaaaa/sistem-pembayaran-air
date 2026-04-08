@@ -15,7 +15,7 @@
                         <strong>Status:</strong> <span class="badge {{ $payment->status->badgeClass() }}">{{ $payment->status->label() }}</span>
                     </div>
 
-                    <form method="POST" action="{{ route('admin.payments.update', $payment) }}">
+                    <form method="POST" action="{{ route('admin.payments.update', $payment) }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
@@ -50,6 +50,18 @@
                             <label for="notes" class="form-label">Catatan</label>
                             <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="2" placeholder="Tambahkan catatan jika diperlukan...">{{ old('notes', $payment->notes) }}</textarea>
                             @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="proof_file" class="form-label">Bukti (opsional)</label>
+                            @if($payment->proof_file && $payment->proof_file !== 'manual')
+                                <div class="mb-2">
+                                    <span class="badge bg-info"><i class="bi bi-file-earmark me-1"></i>File saat ini ada</span>
+                                </div>
+                            @endif
+                            <input type="file" class="form-control @error('proof_file') is-invalid @enderror" id="proof_file" name="proof_file" accept=".jpg,.jpeg,.png,.pdf">
+                            <div class="form-text">Upload file baru untuk mengganti. Format: JPG, PNG, PDF. Maks 2MB.</div>
+                            @error('proof_file')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         @if(auth()->check() && auth()->user()->isPengurus())
