@@ -57,7 +57,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('payments', Admin\PaymentController::class)->except(['create', 'store']);
     Route::post('payments/{payment}/confirm', [Admin\PaymentController::class, 'confirm'])->name('payments.confirm');
     Route::post('payments/{payment}/reject', [Admin\PaymentController::class, 'reject'])->name('payments.reject');
-    Route::get('payments/{payment}/proof', [Admin\PaymentController::class, 'viewProof'])->name('payments.proof');
+    Route::get('payments/proof/{filename}', [Admin\PaymentController::class, 'showProof'])->name('payments.proof');
 
     // Expenses
     Route::resource('expenses', Admin\ExpenseController::class)->except(['show']);

@@ -24,7 +24,7 @@ class PaymentController extends Controller
         if ($search = $request->input('search')) {
             $query->whereHas('resident', function ($q) use ($search) {
                 $q->where('block_number', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
@@ -49,7 +49,7 @@ class PaymentController extends Controller
 
         DB::transaction(function () use ($payment) {
             $payment->update([
-                'status'       => PaymentStatus::Confirmed,
+                'status' => PaymentStatus::Confirmed,
                 'confirmed_by' => Auth::id(),
                 'confirmed_at' => now(),
             ]);
@@ -73,10 +73,10 @@ class PaymentController extends Controller
 
         DB::transaction(function () use ($payment, $validated) {
             $payment->update([
-                'status'       => PaymentStatus::Rejected,
+                'status' => PaymentStatus::Rejected,
                 'confirmed_by' => Auth::id(),
                 'confirmed_at' => now(),
-                'notes'        => $validated['notes'],
+                'notes' => $validated['notes'],
             ]);
 
             $payment->bill->update(['status' => BillStatus::Unpaid]);
@@ -95,18 +95,18 @@ class PaymentController extends Controller
     {
         $validated = $request->validate([
             'payment_date' => 'required|date',
-            'amount_paid'  => 'required|numeric|min:0',
-            'payer_name'   => 'nullable|string|max:255',
-            'payer_phone'  => 'nullable|string|max:20',
-            'notes'        => 'nullable|string|max:500',
-            'proof_file'   => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'amount_paid' => 'required|numeric|min:0',
+            'payer_name' => 'nullable|string|max:255',
+            'payer_phone' => 'nullable|string|max:20',
+            'notes' => 'nullable|string|max:500',
+            'proof_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         if ($request->hasFile('proof_file')) {
             if ($payment->proof_file && $payment->proof_file !== 'manual') {
                 Storage::disk('private')->delete($payment->proof_file);
             }
-            $validated['proof_file'] = $request->file('proof_file')->store('payment_proofs', 'private');
+            $validated['proof_file'] = $request->file('proof_file')->store('payments', 'private');
         }
 
         DB::transaction(function () use ($payment, $validated) {
@@ -134,13 +134,14 @@ class PaymentController extends Controller
             ->with('success', 'Pembayaran berhasil dihapus.');
     }
 
-    // Fix 2: Serve proof files from private disk
-    public function viewProof(Payment $payment)
+    public function showProof($filename)
     {
-        if (!Storage::disk('private')->exists($payment->proof_file)) {
+        $path = storage_path('app/private/payments/' . $filename);
+
+        if (!file_exists($path)) {
             abort(404, 'File bukti tidak ditemukan.');
         }
 
-        return Storage::disk('private')->response($payment->proof_file);
+        return response()->file($path);
     }
 }

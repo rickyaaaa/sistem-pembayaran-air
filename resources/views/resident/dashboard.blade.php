@@ -74,7 +74,7 @@
     {{-- ===== YEAR FILTER ===== --}}
     <form method="GET" class="d-flex align-items-center gap-2 mb-3">
         <label class="form-label mb-0 text-muted" style="font-size:0.8125rem;">Tahun:</label>
-        <select name="year" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+        <select name="year" class="form-select form-select-sm" style="width: auto; min-width: 90px; padding-right: 2rem;" onchange="this.form.submit()">
             @foreach($availableYears as $y)
                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
             @endforeach

@@ -377,10 +377,6 @@
         {{ $slot }}
     </main>
 
-    <footer class="pub-footer">
-        <p class="mb-0">&copy; {{ date('Y') }} SAB Swadaya — Perum The Spring Ville. Semua data bersifat informatif.</p>
-    </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>

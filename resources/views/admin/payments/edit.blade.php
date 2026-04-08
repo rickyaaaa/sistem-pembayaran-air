@@ -89,7 +89,7 @@
                 <div class="card mt-4">
                     <div class="card-header"><i class="bi bi-image me-2"></i> Bukti Pembayaran Terlampir</div>
                     <div class="card-body text-center bg-light">
-                        <img src="{{ route('admin.payments.proof', $payment) }}" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 300px;">
+                        <img src="{{ route('admin.payments.proof', basename($payment->proof_file)) }}" alt="Bukti" class="img-fluid rounded shadow-sm" style="max-height: 300px;">
                     </div>
                 </div>
             @endif

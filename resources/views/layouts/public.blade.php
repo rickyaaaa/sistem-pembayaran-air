@@ -24,7 +24,13 @@
 
     <style>
         /* Public layout overrides */
-        body { background: #f0f4f8; }
+        body { 
+            background: #f0f4f8; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main { flex: 1; }
 
         .public-topbar {
             background: linear-gradient(135deg, #0d6efd 0%, #0891b2 100%);
@@ -123,7 +129,7 @@
 
     @stack('styles')
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100 bg-light">
     <!-- Top Navigation Bar -->
     <nav class="public-topbar">
         <div class="public-topbar-inner">
@@ -153,7 +159,6 @@
                 </a>
 
                 @auth
-                    @auth
                     @if(Auth::user()->isStaff())
                         <a href="{{ route('admin.dashboard') }}" class="admin-link ms-2">
                             <i class="bi bi-shield-lock me-1"></i>Admin
@@ -169,7 +174,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main>
+    <main class="flex-grow-1">
         <div class="public-content">
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -202,11 +207,6 @@
             {{ $slot }}
         </div>
     </main>
-
-    <!-- Footer -->
-    <footer class="public-footer">
-        <p class="mb-0">&copy; {{ date('Y') }} SAB Swadaya — Perum The Spring Ville. Semua data bersifat informatif.</p>
-    </footer>
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

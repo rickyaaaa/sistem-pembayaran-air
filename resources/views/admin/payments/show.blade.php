@@ -118,7 +118,7 @@
                             $ext = strtolower(pathinfo($payment->proof_file, PATHINFO_EXTENSION));
                         @endphp
                         @if(in_array($ext, ['jpg', 'jpeg', 'png']))
-                            <img src="{{ route('admin.payments.proof', $payment) }}" alt="Bukti Pembayaran" class="proof-preview">
+                            <img src="{{ route('admin.payments.proof', basename($payment->proof_file)) }}" alt="Bukti Pembayaran" class="proof-preview">
                         @elseif($ext === 'pdf')
                             <div class="mb-3">
                                 <i class="bi bi-file-earmark-pdf text-danger" style="font-size:3rem;"></i>
@@ -126,7 +126,7 @@
                             </div>
                         @endif
                         <div class="mt-3">
-                            <a href="{{ route('admin.payments.proof', $payment) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <a href="{{ route('admin.payments.proof', basename($payment->proof_file)) }}" target="_blank" class="btn btn-outline-primary btn-sm">
                                 <i class="bi bi-download me-1"></i> Buka File
                             </a>
                         </div>
