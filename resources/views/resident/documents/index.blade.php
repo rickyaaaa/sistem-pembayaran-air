@@ -30,7 +30,7 @@
                                 </div>
                             </div>
                             <div>
-                                <a href="{{ Storage::url($doc->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                <a href="{{ route('resident.documents.download', $doc) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                     <i class="bi bi-download me-1"></i>Unduh
                                 </a>
                             </div>

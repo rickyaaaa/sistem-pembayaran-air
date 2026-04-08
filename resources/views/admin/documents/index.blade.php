@@ -35,7 +35,7 @@
                             <td>{{ $doc->creator->name ?? '-' }}</td>
                             <td>{{ $doc->created_at->format('d/m/Y H:i') }}</td>
                             <td class="pe-4 text-end">
-                                <a href="{{ Storage::url($doc->file_path) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <a href="{{ route('admin.documents.download', $doc) }}" class="btn btn-sm btn-outline-info">
                                     <i class="bi bi-download"></i>
                                 </a>
                                 <form action="{{ route('admin.documents.destroy', $doc) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus dokumen ini?');">
