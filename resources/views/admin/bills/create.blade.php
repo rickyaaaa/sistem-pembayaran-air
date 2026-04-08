@@ -1,6 +1,13 @@
 <x-app-layout>
     <x-slot name="title">Buat Tagihan</x-slot>
 
+    @push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .ts-control { padding: 0.375rem 0.75rem; border-color: #dee2e6; }
+    </style>
+    @endpush
+
     <div class="row justify-content-center animate-in">
         <div class="col-lg-6">
             <div class="card">
@@ -88,7 +95,18 @@
     </div>
 
     @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            new TomSelect("#resident_id", {
+                create: false,
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                }
+            });
+        });
+
         function toggleResidentSelect() {
             const isSingle = document.getElementById('typeSingle').checked;
             document.getElementById('residentSelect').style.display = isSingle ? 'block' : 'none';
