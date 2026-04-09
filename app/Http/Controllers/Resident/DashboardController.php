@@ -47,9 +47,11 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $recentRegistrations = Registration::with('resident')
+        $recentPayments = Payment::with(['resident', 'bill'])
+            ->where('status', PaymentStatus::Confirmed)
             ->whereYear('payment_date', $year)
             ->orderByDesc('payment_date')
+            ->orderByDesc('created_at')
             ->limit(5)
             ->get();
 
@@ -114,7 +116,7 @@ class DashboardController extends Controller
             'totalExpenses',
             'currentBalance',
             'recentExpenses',
-            'recentRegistrations',
+            'recentPayments',
             'availableYears',
             'blockMonthlyIncome',
         ));

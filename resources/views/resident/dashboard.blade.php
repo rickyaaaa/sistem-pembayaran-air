@@ -167,12 +167,12 @@
                 <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between py-3 px-4"
                      style="border-radius:14px 14px 0 0;border-bottom:1px solid #f1f5f9;">
                     <span class="fw-semibold" style="font-size:.9375rem;">
-                        <i class="bi bi-box-arrow-in-down-right me-2 text-success"></i>Pemasukan Terbaru
+                        <i class="bi bi-box-arrow-in-down-right me-2 text-success"></i>Pembayaran Terbaru
                     </span>
                     <span class="badge bg-success bg-opacity-10 text-success" style="font-size:.72rem;">{{ $year }}</span>
                 </div>
                 <div class="card-body p-0">
-                    @forelse($recentRegistrations as $reg)
+                    @forelse($recentPayments as $payment)
                         <div class="d-flex align-items-center gap-3 px-4 py-3 {{ !$loop->last ? 'border-bottom' : '' }}"
                              style="transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
                             <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
@@ -181,30 +181,25 @@
                             </div>
                             <div class="flex-grow-1 min-w-0">
                                 <div class="fw-semibold text-truncate" style="font-size:.875rem;">
-                                    {{ $reg->resident ? strtoupper($reg->resident->block_number) . ' - ' . $reg->resident->name : ($reg->notes ?: 'Pemasukan Tanpa Warga') }}
+                                    Blok {{ strtoupper($payment->resident->block_number) }}
                                 </div>
                                 <div class="text-muted" style="font-size:.75rem;">
-                                    {{ $reg->payment_date->format('d F Y') }}
-                                    @if($reg->category)
-                                        &bull; <span class="badge {{ $reg->category->badgeClass() }}" style="font-size:.68rem;">{{ $reg->category->label() }}</span>
-                                    @endif
+                                    {{ $payment->bill->period }}
                                 </div>
-                                @if($reg->notes)
-                                    <div class="mt-1 small text-info" style="font-size:.7rem;">
-                                        <i class="bi bi-info-circle me-1"></i>{{ $reg->notes }}
-                                    </div>
-                                @endif
                             </div>
                             <div class="text-end flex-shrink-0">
                                 <div class="fw-bold text-success" style="font-size:.9rem;">
-                                    Rp {{ number_format($reg->amount, 0, ',', '.') }}
+                                    Rp {{ number_format($payment->amount_paid, 0, ',', '.') }}
+                                </div>
+                                <div class="mt-1">
+                                    <x-status-badge :status="$payment->status" />
                                 </div>
                             </div>
                         </div>
                     @empty
                         <div class="text-center text-muted py-5">
                             <i class="bi bi-inbox" style="font-size:2rem;opacity:.4;"></i>
-                            <p class="mt-2 mb-0">Belum ada pemasukan terbaru</p>
+                            <p class="mt-2 mb-0">Belum ada pembayaran terbaru</p>
                         </div>
                     @endforelse
                 </div>
