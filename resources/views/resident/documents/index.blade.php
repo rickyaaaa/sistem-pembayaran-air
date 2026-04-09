@@ -13,6 +13,23 @@
                 Berikut ini adalah dokumen-dokumen terbuka mengenai keorganisasian SAB Springville seperti Anggaran Dasar, AD/ART, dan SOP terkait.
             </div>
 
+            <form method="GET" action="{{ route('resident.documents.index') }}" class="d-flex flex-wrap gap-3 mb-4 align-items-center bg-light p-3 rounded" style="border: 1px solid #f1f5f9;">
+                <div class="d-flex align-items-center gap-2">
+                    <label for="start_date" class="form-label mb-0 small text-muted text-nowrap"><i class="bi bi-calendar-event me-1"></i>Dari Tgl:</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control form-control-sm border-0 shadow-sm" value="{{ request('start_date') }}">
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="end_date" class="form-label mb-0 small text-muted text-nowrap"><i class="bi bi-calendar-event-fill me-1"></i>Sampai Tgl:</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control form-control-sm border-0 shadow-sm" value="{{ request('end_date') }}">
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary px-3 shadow-sm">Filter</button>
+                    @if(request('start_date') || request('end_date'))
+                        <a href="{{ route('resident.documents.index') }}" class="btn btn-sm btn-light border shadow-sm">Reset</a>
+                    @endif
+                </div>
+            </form>
+
             <div class="list-group">
                 @forelse($documents as $doc)
                     <div class="list-group-item border-0 px-0 py-3 {{ !$loop->last ? 'border-bottom' : '' }}">

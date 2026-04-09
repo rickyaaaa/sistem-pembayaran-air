@@ -8,9 +8,18 @@ use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        $documents = Document::with('creator')->latest()->paginate(15);
+        $query = Document::with('creator');
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        $documents = $query->latest()->paginate(15)->withQueryString();
         return view('resident.documents.index', compact('documents'));
     }
 
