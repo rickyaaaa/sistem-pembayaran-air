@@ -14,11 +14,11 @@ use App\Helpers\DatabaseHelper;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
     {
         $year = (int) $request->input('year', now()->year);
 
-        $stats = Cache::remember("resident_dashboard_stats_{$year}", 300, function () use ($year) {
+        $stats = Cache::remember("resident_dashboard_stats_{$year}", 300, function () use ($year): array {
             $totalIncome = Payment::where('status', PaymentStatus::Confirmed)
                 ->whereYear('payment_date', $year)
                 ->sum('amount_paid');
@@ -37,9 +37,13 @@ class DashboardController extends Controller
             ];
         });
 
+        /** @var float $totalIncome */
         $totalIncome = $stats['totalIncome'];
+        /** @var float $totalRegistrations */
         $totalRegistrations = $stats['totalRegistrations'];
+        /** @var float $totalExpenses */
         $totalExpenses = $stats['totalExpenses'];
+        /** @var float $currentBalance */
         $currentBalance = $stats['currentBalance'];
 
         $recentExpenses = Expense::whereYear('date', $year)
@@ -60,6 +64,7 @@ class DashboardController extends Controller
 
         $monthFn = DatabaseHelper::getMonthFunction('payments.payment_date');
 
+        /** @var \Illuminate\Database\Eloquent\Collection $matrixRaw */
         $matrixRaw = Payment::where('payments.status', PaymentStatus::Confirmed)
             ->whereYear('payments.payment_date', $year)
             ->join('residents', 'residents.id', '=', 'payments.resident_id')
@@ -74,6 +79,7 @@ class DashboardController extends Controller
         }
         $units = $unitQuery->orderBy('block_number')->pluck('block_number');
 
+        /** @var array<string, array<int, float>> $blockMonthlyIncome */
         $blockMonthlyIncome = [];
         foreach ($units as $house) {
             $blockMonthlyIncome[$house] = array_fill(1, 12, 0);
@@ -97,7 +103,8 @@ class DashboardController extends Controller
         $offset = ($page - 1) * $perPage;
 
         $items = array_slice($blockMonthlyIncome, $offset, $perPage, true);
-        $blockMonthlyIncome = new \Illuminate\Pagination\LengthAwarePaginator(
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $paginator */
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
             $items,
             count($blockMonthlyIncome),
             $perPage,
@@ -106,7 +113,7 @@ class DashboardController extends Controller
         );
 
         if ($request->ajax() && $request->input('partial') === 'matrix') {
-            return view('admin.partials.dashboard_matrix_table', compact('blockMonthlyIncome', 'year'));
+            return view('admin.partials.dashboard_matrix_table', ['blockMonthlyIncome' => $paginator, 'year' => $year]);
         }
 
         return view('resident.dashboard', compact(
@@ -118,8 +125,7 @@ class DashboardController extends Controller
             'recentExpenses',
             'recentPayments',
             'availableYears',
-            'blockMonthlyIncome',
-        ));
+        ) + ['blockMonthlyIncome' => $paginator]);
     }
 
     public function exportExpenses(Request $request)
