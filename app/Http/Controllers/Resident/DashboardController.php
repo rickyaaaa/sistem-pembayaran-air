@@ -121,4 +121,21 @@ class DashboardController extends Controller
             'blockMonthlyIncome',
         ));
     }
+
+    public function exportExpenses(Request $request)
+    {
+        $year = (int) $request->input('year', now()->year);
+        $month = $request->input('month');
+
+        if ($month) {
+            $month = (int) $month;
+            $monthName = \Carbon\Carbon::create()->month($month)->translatedFormat('F');
+            $filename = "Pengeluaran_SAB_{$monthName}_{$year}.xlsx";
+        } else {
+            $month = null;
+            $filename = "Pengeluaran_SAB_{$year}.xlsx";
+        }
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ExpensesExport($year, $month), $filename);
+    }
 }

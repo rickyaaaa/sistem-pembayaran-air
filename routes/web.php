@@ -92,6 +92,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 Route::prefix('warga')->name('resident.')->group(function () {
     // Public Dashboard (financial summary + expense list)
     Route::get('/dashboard', [Resident\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/pengeluaran/export', [Resident\DashboardController::class, 'exportExpenses'])
+        ->middleware('throttle:10,1')
+        ->name('expenses.export');
 
     // Bill Search by house number
     Route::get('/tagihan', [Resident\BillController::class, 'index'])

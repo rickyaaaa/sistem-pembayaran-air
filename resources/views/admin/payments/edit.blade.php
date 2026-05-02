@@ -55,8 +55,11 @@
                         <div class="mb-3">
                             <label for="proof_file" class="form-label">Bukti (opsional)</label>
                             @if($payment->proof_file && $payment->proof_file !== 'manual')
-                                <div class="mb-2">
+                                <div class="mb-2 d-flex align-items-center gap-2">
                                     <span class="badge bg-info"><i class="bi bi-file-earmark me-1"></i>File saat ini ada</span>
+                                    <a href="{{ route('admin.payments.proof', basename($payment->proof_file)) }}" target="_blank" class="btn btn-sm btn-outline-primary" style="padding: 0.1rem 0.5rem; font-size: 0.8rem;">
+                                        <i class="bi bi-eye me-1"></i>Lihat Berkas
+                                    </a>
                                 </div>
                             @endif
                             <input type="file" class="form-control @error('proof_file') is-invalid @enderror" id="proof_file" name="proof_file" accept=".jpg,.jpeg,.png,.pdf">

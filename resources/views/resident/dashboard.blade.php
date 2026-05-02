@@ -209,12 +209,23 @@
         {{-- ===== LAST 5 EXPENSES ===== --}}
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm h-100" style="border-radius:14px;">
-                <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between py-3 px-4"
+                <div class="card-header bg-white border-0 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between py-3 px-4 gap-2"
                      style="border-radius:14px 14px 0 0;border-bottom:1px solid #f1f5f9;">
                     <span class="fw-semibold" style="font-size:.9375rem;">
-                        <i class="bi bi-cash-stack me-2 text-primary"></i>Pengeluaran Terakhir
+                        <i class="bi bi-cash-stack me-2 text-primary"></i>Pengeluaran Terakhir <span class="badge bg-primary bg-opacity-10 text-primary ms-1" style="font-size:.72rem;">{{ $year }}</span>
                     </span>
-                    <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size:.72rem;">{{ $year }}</span>
+                    <form action="{{ route('resident.expenses.export') }}" method="GET" class="d-flex align-items-center gap-2 m-0">
+                        <input type="hidden" name="year" value="{{ $year }}">
+                        <select name="month" class="form-select form-select-sm border-0 bg-light py-1" style="width:110px; font-size:.75rem;">
+                            <option value="">Semua Bulan</option>
+                            @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $idx => $mName)
+                                <option value="{{ $idx + 1 }}">{{ $mName }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary py-1 px-2 d-flex align-items-center gap-1" style="font-size:.75rem;">
+                            <i class="bi bi-download"></i><span class="d-none d-sm-inline">Unduh</span>
+                        </button>
+                    </form>
                 </div>
                 <div class="card-body p-0">
             @forelse($recentExpenses as $expense)

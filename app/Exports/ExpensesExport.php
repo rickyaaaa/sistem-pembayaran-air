@@ -13,16 +13,24 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ExpensesExport implements FromQuery, WithHeadings, WithMapping, WithTitle, ShouldAutoSize, WithStyles
 {
-    public function __construct(private int $year) {}
+    public function __construct(private int $year, private ?int $month = null) {}
 
     public function query()
     {
-        return Expense::with('creator')
+        $query = Expense::with('creator')
             ->where(function($q) {
                 $yearFunc = \App\Helpers\DatabaseHelper::getYearFunction('date');
                 $q->whereRaw("{$yearFunc} = ?", [$this->year]);
-            })
-            ->orderBy('date');
+            });
+
+        if ($this->month) {
+            $query->where(function($q) {
+                $monthFunc = \App\Helpers\DatabaseHelper::getMonthFunction('date');
+                $q->whereRaw("{$monthFunc} = ?", [$this->month]);
+            });
+        }
+
+        return $query->orderBy('date');
     }
 
     public function headings(): array
@@ -49,6 +57,10 @@ class ExpensesExport implements FromQuery, WithHeadings, WithMapping, WithTitle,
 
     public function title(): string
     {
+        if ($this->month) {
+            $monthName = \Carbon\Carbon::create()->month($this->month)->translatedFormat('F');
+            return 'Pengeluaran ' . $monthName . ' ' . $this->year;
+        }
         return 'Pengeluaran ' . $this->year;
     }
 
