@@ -22,17 +22,17 @@
                             <label class="form-label">Tipe Pembuatan <span class="text-danger">*</span></label>
                             <div class="d-flex gap-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="type" id="typeBulk" value="bulk" {{ old('type', 'bulk') === 'bulk' ? 'checked' : '' }} onchange="toggleResidentSelect()">
+                                    <input class="form-check-input" type="radio" name="type" id="typeBulk" value="bulk" {{ old('type') === 'bulk' ? 'checked' : '' }} onchange="toggleResidentSelect()">
                                     <label class="form-check-label" for="typeBulk">Semua Warga Aktif</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="type" id="typeSingle" value="single" {{ old('type') === 'single' ? 'checked' : '' }} onchange="toggleResidentSelect()">
+                                    <input class="form-check-input" type="radio" name="type" id="typeSingle" value="single" {{ old('type', 'single') === 'single' ? 'checked' : '' }} onchange="toggleResidentSelect()">
                                     <label class="form-check-label" for="typeSingle">Per Warga</label>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mb-3" id="residentSelect" style="display: {{ old('type') === 'single' ? 'block' : 'none' }};">
+                        <div class="mb-3" id="residentSelect" style="display: {{ old('type', 'single') === 'single' ? 'block' : 'none' }};">
                             <label for="resident_id" class="form-label">Pilih Warga <span class="text-danger">*</span></label>
                             <select name="resident_id" id="resident_id" class="form-select @error('resident_id') is-invalid @enderror">
                                 <option value="">-- Pilih Warga --</option>
