@@ -236,8 +236,8 @@
                         <i class="bi bi-receipt text-primary"></i>
                     </div>
                     <div class="flex-grow-1 min-w-0">
-                        <div class="fw-semibold text-truncate" style="font-size:.875rem;">{{ $expense->description }}</div>
-                        <div class="text-muted" style="font-size:.75rem;">
+                        <div class="fw-semibold text-break" style="font-size:.875rem; line-height: 1.4;">{{ $expense->description }}</div>
+                        <div class="text-muted mt-1" style="font-size:.75rem;">
                             {{ $expense->date->format('d F Y') }}
                             @if($expense->category)
                                 &bull; <span class="badge bg-secondary bg-opacity-10 text-secondary" style="font-size:.68rem;">{{ $expense->category }}</span>
